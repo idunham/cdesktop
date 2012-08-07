@@ -420,7 +420,7 @@ void DoExplicitSelectGrab (Window window)
 {
 
     WmGrabButton (DISPLAY, FOCUS_SELECT_BUTTON, 0, window,
-	False, ButtonReleaseMask, GrabModeSync, GrabModeSync, None,
+	False, ButtonReleaseMask | ButtonPressMask, GrabModeSync, GrabModeSync, None,
 	None);
 
 } /* END OF FUNCTION DoExplicitSelectGrab */
