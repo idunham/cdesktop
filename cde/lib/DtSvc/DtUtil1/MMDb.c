@@ -674,19 +674,16 @@ write_db(DtDtsMMHeader *header, void *index, int size, const char *CacheFile)
 	int	fd;
 	mode_t	cmask = umask((mode_t)077);
 	char	*tmpfile;
-	/* tempnam(3) is affected by the TMPDIR environment variable. */
-	/* This creates problems for rename() is "tmpfile" and "cacheFile" */
-	/* are on different file systems.  Use tmpnam(3) to create the */
-	/* unique file name instead. */
-	char tmpnam_buf[L_tmpnam + 1];
 
-	tmpfile = (char *)malloc(sizeof(_DTDTSMMTEMPDIR) +
-				 sizeof(_DTDTSMMTEMPFILE) + L_tmpnam + 3);
-	tmpnam(tmpnam_buf);
-	sprintf(tmpfile, "%s/%s%s", _DTDTSMMTEMPDIR, _DTDTSMMTEMPFILE,
-		basename(tmpnam_buf));
+	if ((tmpfile = malloc(sizeof(_DTDTSMMTEMPDIR) +
+	    sizeof(_DTDTSMMTEMPFILE) + 7)) == NULL) {
+		_DtSimpleError(DtProgName, DtError, NULL, tmpfile, NULL);
+		return 0;
+	}
 
-	fd  = open(tmpfile, O_RDWR|O_CREAT, 0600);
+	sprintf(tmpfile, "%s/%sXXXXXX", _DTDTSMMTEMPDIR, _DTDTSMMTEMPFILE);
+	fd = mkstemp(tmpfile);
+
 	umask(cmask);
 
 	if(fd ==  -1)
