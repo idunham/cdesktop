@@ -324,7 +324,7 @@ DEFAULT_PRINTER="DtPrint"
     then
 	awk '{print "kill -1 " $2}' /tmp/tmppsout | /bin/csh
     else
-	/usr/sbin/inetd -s
+	/usr/sbin/inetd -s || /usr/sbin/inetd
     fi
   fi
 
