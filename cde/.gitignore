@@ -45,6 +45,7 @@ installCDE
 updateCDE
 
 installCDE.*.log
+*.log
 
 cscope.out
 
