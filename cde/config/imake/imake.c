@@ -885,7 +885,7 @@ get_distrib(FILE *inFile)
   /* would like to know what version of the distribution it is */
 }
 
-static const char *libc_c=
+static const char libc_c[]=
 "#include <stdio.h>\n"
 "#include <ctype.h>\n"
 "\n"
@@ -950,14 +950,40 @@ static const char *libc_c=
 "}\n"
 ;
 
+#define libc32path "/usr/lib/libc.so"
+#define libc64path "/usr/lib64/libc.so"
+
 static void
 get_libc_version(FILE *inFile)
 {
-  static char* libcso = "/usr/lib/libc.so";
+  char* libcso = NULL;
   struct stat sb;
   char buf[PATH_MAX];
   char* ptr;
   int libcmajor, libcminor, libcteeny;
+  struct utsname u;
+
+  /*
+   * If we are on a 64-bit Linux system and we see /usr/lib64/libc.so,
+   * we should use it.  Otherwise go with /usr/lib/libc.so.  It is entirely
+   * possible that someone will be running a 32-bit userland on a 64-bit
+   * system.
+   */
+  if (uname(&u) == -1) {
+    fprintf(stderr, "%s (%d): %s\n", __func__, __LINE__, strerror(errno));
+    abort();
+  }
+
+  if (!strcmp(u.sysname, "Linux") &&
+      (!strcmp(u.machine, "x86_64"))) {
+    if (!lstat (libc64path, &sb) && S_ISREG(sb.st_mode)) {
+      libcso = libc64path;
+    }
+  }
+
+  if (libcso == NULL) {
+    libcso = libc32path;
+  }
 
   if (lstat (libcso, &sb) == 0) {
     if (S_ISLNK (sb.st_mode)) {
@@ -977,12 +1003,34 @@ get_libc_version(FILE *inFile)
        * /usr/lib/libc.so is NOT a symlink -- this is libc 6.x / glibc 2.x
        * now we have to figure this out the hard way.
        */
-      char *aout = tmpnam (NULL);
+      char aout[PATH_MAX];
+      int fd = -1;
       FILE *fp;
       const char *format = "%s -o %s -x c -";
       char *cc;
       int len;
       char *command;
+
+      memset(&aout, '\0', PATH_MAX);
+
+      if (!lstat(getenv("TMPDIR"), &sb) && S_ISDIR(sb.st_mode))
+	strcpy(aout, getenv("TMPDIR"));
+#ifdef P_tmpdir /* defined by XPG and XOPEN, but don't assume we have it */
+      else if (!lstat(P_tmpdir, &sb) && S_ISDIR(sb.st_mode))
+	strcpy(aout, P_tmpdir);
+#endif
+      else if (!lstat("/tmp", &sb) && S_ISDIR(sb.st_mode))
+	strcpy(aout, "/tmp");
+      else
+	abort();
+
+      strcpy(aout+strlen(aout), "/imaketmp.XXXXXX");
+
+      if ((fd = mkstemp(aout)) == -1)
+	abort ();
+
+      if (close(fd) == -1)
+	abort ();
 
       cc = getenv ("CC");
       if (cc == NULL)
