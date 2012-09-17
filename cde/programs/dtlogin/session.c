@@ -65,7 +65,11 @@
 # include <signal.h>
 # include <X11/Xatom.h>
 # include <setjmp.h>
+#if defined(__FreeBSD__)
+# include <utmpx.h>
+#else
 # include <utmp.h>
+#endif
 #include <unistd.h>
 #include <pwd.h>
 #include <dirent.h>
@@ -1648,6 +1652,8 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
             failsafeArgv[i++] = "/usr/X/bin/xterm";
 #elif defined(__hpux)
 	    failsafeArgv[i++] = "/usr/bin/X11/hpterm";
+#elif defined(CSRG_BASED)
+	    failsafeArgv[i++] = "/usr/local/bin/xterm";
 #else
 	    failsafeArgv[i++] = "/usr/bin/X11/xterm";
 #endif
