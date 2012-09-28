@@ -56,8 +56,10 @@
 
 #include <Xm/Xm.h>
 #include <Xm/XmP.h>
+#include <Xm/DrawP.h>
 #include <Xm/TextF.h>
 #include <Xm/VirtKeys.h>
+#include <Xm/ScrollBar.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -70,6 +72,9 @@
 
 #include <X11/cursorfont.h>
 #include <X11/Xutil.h>
+#ifndef  XK_MISCELLANY
+#define  XK_MISCELLANY
+#endif
 #include <X11/keysymdef.h>
 #include <Xm/PrimitiveP.h>  /* For HighlightBorder & UnhighlightBorder */
 
@@ -80,6 +85,7 @@
 #include "Prefs.h"
 #include "Common.h"
 #include "Filter.h"
+#include "SharedProcs.h"
 
                            /* For HightlightBorder & UnhighlightBorder */
 externalref XmPrimitiveClassRec xmPrimitiveClassRec;

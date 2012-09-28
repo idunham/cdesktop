@@ -59,6 +59,7 @@
 
 #include <Dt/Connect.h>
 #include <Dt/FileM.h>
+#include <Dt/SharedProcs.h>
 
 #include <Tt/tttk.h>
 
@@ -133,7 +134,7 @@ ShowModAttrDialog(
   
    XmUpdateDisplay (w);
 
-   if((int)client_data != 0)
+   if((int)(XtArgVal)client_data != 0)
       mbar = XtParent(w);
    else
       mbar = XmGetPostedFromWidget(XtParent(w));

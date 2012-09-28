@@ -106,6 +106,7 @@
 #include <pwd.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <ctype.h>
 
 #include <Xm/XmP.h>
 #include <Xm/CascadeB.h>
@@ -131,7 +132,6 @@
 #include <X11/ShellP.h>
 #include <X11/Shell.h>
 #include <X11/Xatom.h>
-#include <X11/keysymdef.h>
 
 #include <Xm/Protocols.h>
 
@@ -142,6 +142,8 @@
 #include <Dt/HourGlass.h>
 #include <Dt/DtNlUtils.h>
 #include <Dt/Dts.h>
+#include <Dt/SharedProcs.h>
+#include <Dt/Wsm.h>
 
 #include <Xm/DragIcon.h>
 #include <Xm/DragC.h>
@@ -163,6 +165,7 @@
 #include "Prefs.h"
 #include "SharedMsgs.h"
 #include "IconicPath.h"
+#include "DtSvcInternal.h"
 
 
 /*  Dialog classes installed by Main.c  */
