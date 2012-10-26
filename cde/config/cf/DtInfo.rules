@@ -44,7 +44,7 @@ libname/lib/**/libname/**/T.a: FRC				@@\
 	@(cd libname ;	\					@@\
 		echo "### Making lib libname Templates ###" ; \ @@\
 		$(MAKE) lib/**/libname/**/T.a ; \		@@\
-	)							
+	)
 
 # define makelibsubsubdir(subdir,libname)			@@\
 								@@\
@@ -52,15 +52,15 @@ subdir/libname/lib/**/libname.a: FRC				@@\
 	@(cd subdir ;	\					@@\
 		echo "### Making lib libname ###" ; \		@@\
 		$(MAKE) libname/lib/**/libname.a ; \		@@\
-	)						
-	
+	)
+
 # define makelibTsubsubdir(subdir,libname)			@@\
 								@@\
 subdir/libname/lib/**/libname/**/T.a: FRC			@@\
 	@(cd subdir ;	\					@@\
 		echo "### Making lib libname Templates ###" ; \ @@\
 		$(MAKE) libname/lib/**/libname/**/T.a ; \	@@\
-	)							
+	)
 #else /* not defined(SunArchitecture) && CplusplusCompilerMajorVersion > 3 */
 # define makelibT(libname)					@@\
 	makelib(libname)
@@ -287,7 +287,7 @@ file.o: file.y							@@\
 #define HPchatr(program)					@@\
 install::							@@\
 	chatr +s enable program
-		
+
 /*
  * Total bogosity with error codes:
  *	if [ `chatr $@ | grep 'libftft'` -gt 0 ] ; then \	@@\
@@ -319,7 +319,7 @@ clean::								@@\
 
 #define SimpleCPlusPlusProgram(program,objects,libs)		@@\
 	AllTarget(program)					@@\
-	CPlusPlusProgram(program,objects,libs)	
+	CPlusPlusProgram(program,objects,libs)
 
 
 
@@ -345,7 +345,7 @@ program: objects						@@\
 clean::								@@\
 	$(RM) program
 
-XCOMM 
+XCOMM
 XCOMM SimpleCProgram is required by the C modules in buildtools to build
 XCOMM statically
 XCOMM
@@ -367,7 +367,7 @@ XCOMM The following macros are used by the build tools
  * InstallBuildToolsBinary - generate rules to install an executable
  *	program in build tools.
  */
-#ifndef InstallBuildToolsBinary 
+#ifndef InstallBuildToolsBinary
 # define InstallBuildToolsBinary(program)			@@\
 install_buildtools::						@@\
 	MakeDir($(INSTALL_PLATFORM_ETC_DIR))			@@\
@@ -396,7 +396,7 @@ install_buildtools:: program					@@\
 #endif /* InstallPlatformBuildToolsScript */
 
 
-XCOMM 
+XCOMM
 XCOMM only use this for files that are platform independent
 XCOMM /* this is based upon InstallScript in Imake.rules */
 XCOMM
@@ -408,7 +408,6 @@ install:: progname						@@\
 XCOMM
 XCOMM don't depend on built-in .C.o rules
 XCOMM
-NormalCplusplusObjectRule()
 
 
 XCOMM

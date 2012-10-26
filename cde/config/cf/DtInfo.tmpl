@@ -21,7 +21,7 @@ XCOMM      build using installed X11 libs and headers
 #  define UseInstalled
 # endif
 # ifndef BuildLocalInfolibs
-XCOMM      infolib(s) built from local subtree 
+XCOMM      infolib(s) built from local subtree
 #  define BuildLocalInfolibs
 # endif
 # ifndef BuildStandalonePackaging
@@ -157,7 +157,7 @@ DYNAMIC=-Wl,-a,shared
 
 XCOMM set platform subdir finder
 #ifdef  HAL32V7Architecture
-PLATFORM=halos 
+PLATFORM=halos
 # define DoLicenseManagement
 #elif defined(HPArchitecture)
 PLATFORM=hpux
@@ -265,7 +265,7 @@ DTSVCLIB=$(DYNAMIC) $(CDE_LIBS) -lDtSvc
 #ifdef  BuildOutsideCde
 DTHELP_LIBRARY=$(DYNAMIC) -L$(OLIAS)/../../exports/lib -lDtHelp
 DTHELP_INCLUDES=$(OLIAS)/../../exports/include
-TREE_INCLUDES=-I$(OLIAS)/../../exports/include -I$(OLIAS)/../../exports/include/Misc 
+TREE_INCLUDES=-I$(OLIAS)/../../exports/include -I$(OLIAS)/../../exports/include/Misc
 #else
 DTHELP_LIBRARY=$(DYNAMIC) $(CDE_LIBS) -lDtHelp
 DTHELP_INCLUDES=$(TOP)/exports/include
@@ -344,10 +344,6 @@ XCOMM
 
 CEXT = c
 
-XCOMM Alway search our special config directory.
-CONFIGDIR = $(OLIAS)/tools/config
-IRULESRC  = $(OLIAS)/tools/config
-
 XCOMM
 XCOMM Installation stuff
 XCOMM
@@ -422,7 +418,7 @@ XTOOLLIB = -L$(TOP)/imports/x11/lib $(XTOOLONLYLIB) $(SMLIB) $(ICELIB)
 NO_EXC=-noex
 TEMPLATE_OBJS=*.o.ptrep/TemplateDB//**/*.o
 TEMPLATE_DB=*.o.ptrep
-#elif defined(SunArchitecture) && CplusplusCompilerMajorVersion > 2 
+#elif defined(SunArchitecture) && CplusplusCompilerMajorVersion > 2
 NO_EXC=-noex
 TEMPLATE_DB=TemplateDB
 TEMPLATE_OBJS=TemplateDB//**/*.o
@@ -430,7 +426,7 @@ TEMPLATE_OBJS=TemplateDB//**/*.o
 
 #define TemplateObjs $(TEMPLATE_OBJS)
 
-#if defined(i386Architecture) || defined(AlphaArchitecture)
+#if defined(i386Architecture) || defined(AMD64Architecture) || defined(AlphaArchitecture)
 # define ByteOrderDefines LittleEndianDefines
 #elif defined(HAL32V7Architecture) || defined(SunArchitecture) || defined(AIXArchitecture) || defined(HPArchitecture) || defined(UXPArchitecture)
 # define ByteOrderDefines BigEndianDefines
@@ -446,4 +442,3 @@ BYTE_ORDER_DEFINES=ByteOrderDefines
  */
 
 install_buildtools::
-
