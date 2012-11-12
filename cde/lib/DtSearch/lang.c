@@ -246,7 +246,6 @@ static int	search_wordtree (WORDTREE *wordtree, UCHAR *wordstring)
 {
     static int     	direction;
     static WORDTREE	*node;
-    static char		*cptr;
 
     if (debugging_search_wordtree)
 	fprintf (aa_stderr, PROGNAME"196 search wordtree for '%s':\n",
@@ -261,7 +260,7 @@ static int	search_wordtree (WORDTREE *wordtree, UCHAR *wordstring)
 	/* Descend left or right depending on word */
 	if (debugging_search_wordtree)
 	    fprintf (aa_stderr, "  %c '%s'\n",
-		(direction < 0) ? 'L' : 'R', node->word);
+		(direction < 0) ? 'L' : 'R', (char *) node->word);
 	if (direction < 0)
 	    node = node->llink;
 	else
@@ -329,8 +328,6 @@ char	*teskey_parser (PARG *parg)
     static size_t	outbufsz =	0;
     static UCHAR	*endmaxword;	/* end largest possible output word */
     static UCHAR	*outp;		/* next loc in outbuf */
-    static char		*begw;	/* beginning of a word in the input buffer */
-    static char		*endw;	/* end of a word in the input buffer */
     static int		*charmap;
     static int		minwordsz, maxwordsz;
     static int		wordlen;
@@ -380,8 +377,8 @@ char	*teskey_parser (PARG *parg)
 	endmaxword = outbuf + maxwordsz;
 	if (debugging_teskey)
 	    fprintf (aa_stderr,
-		"teskey: start of text block, maxwsz=%ld outbufsz=%ld\n",
-		maxwordsz, outbufsz);
+		"teskey: start of text block, maxwsz=%d outbufsz=%lu\n",
+		maxwordsz, (unsigned long) outbufsz);
 	readcount = 0L;
     }
 
@@ -657,7 +654,6 @@ int	load_wordtree (
     int		is_duplicate;
     long	linecount = 0;
     char	*token;
-    char	*cptr;
     char	readbuf [256];
     char	sprintbuf [_POSIX_PATH_MAX + 1024];
     FILE	*fileid;
@@ -1091,7 +1087,6 @@ static void	free_paice_rules (PRULE ***rules_table_ptr)
  */
 static int      load_paice_suffixes (DBLK *dblk, DBLK *dblist)
 {
-    int		i;
     FILE	*fp;
     DBLK	*db;
     PRULE	*prule, **prule_link;
@@ -1571,9 +1566,7 @@ char	*null_lstrupr (char *s, DBLK *d)
  */
 int	load_language (DBLK *dblk, DBLK *dblist)
 {
-    int		i;
     int		oops =	FALSE;
-    char	msgbuf [512];
     int		language = dblk->dbrec.or_language;
 
     if (debugging_loadlang)

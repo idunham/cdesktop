@@ -221,7 +221,7 @@ BAD_DBA:
 	if (debugging_boolsrch) {
 	    fprintf (aa_stderr,
 		PROGNAME"434 Invalid dba %ld.  "
-		"recno=%ld bitvec[%d]=%02x  db_status=%d.\n",
+		"recno=%ld bitvec[%ld]=%02x  db_status=%d.\n",
 		objrecdba, recno, recno>>3, 1<<(recno%8), db_status);
 	    fflush (aa_stderr);
 	}
@@ -256,7 +256,6 @@ BAD_DBA:
 static void	calculate_idfs (void)
 {
     int		i;
-    char	*cptr;
     double	dbl;
 
     for (i = 0;  i < saveusr.stemcount;  i++) {
@@ -270,7 +269,7 @@ static void	calculate_idfs (void)
 	    if (debugging_boolsrch)
 		fprintf (aa_stderr,
 		    PROGNAME"733 IDF[%d]  numdocs=%5ld  idf=%lf\n",
-		    i, or_wordrecs[i].or_hwaddrs, idf[i]);
+		    i, (long) or_wordrecs[i].or_hwaddrs, idf[i]);
 	}
     }
     return;
@@ -356,9 +355,9 @@ static int	load_or_wordrecs (void)
 	    }
 	    if (debugging_boolsrch)
 		fprintf (aa_stderr, "ofs=%ld addrs=%ld free=%ld\n",
-		    wordrec->or_hwoffset,
-		    wordrec->or_hwaddrs,
-		    wordrec->or_hwfree);
+		    (long) wordrec->or_hwoffset,
+		    (long) wordrec->or_hwaddrs,
+		    (long) wordrec->or_hwfree);
 	    if (wordrec->or_hwaddrs > OE_words_hitlimit) {
 		sprintf (msgbuf, catgets (dtsearch_catd, MS_boolsrch, 14,
 		    "%s '%s' has more than %ld hits.\n"
@@ -1084,7 +1083,7 @@ static DB_ADDR	read_d99 (struct or_hwordrec *wordrec)
     static DB_ADDR	readbuf [DBAS_PER_BLOCK];
     static DB_ADDR	*bufptr, *endbuf;
     static FILE		*fptr;
-    static long		bal_read, request_read, actual_read;
+    static long		bal_read, request_read;
 
     /* First call for new term */
     if (wordrec) {
@@ -1373,7 +1372,7 @@ DONE_READING:
     if (debugging_boolsrch) {
 	int	i;
 	if (debugging_boolsrch)
-	    fprintf (aa_stderr, PROGNAME"313 BITVEC[%ld]:\n", save_stemno);
+	    fprintf (aa_stderr, PROGNAME"313 BITVEC[%d]:\n", save_stemno);
 	for  (i=0; i<bitveclen; i++) {
 	    fprintf (aa_stderr, " %02x", bitvecs[save_stemno][i]);
 	    if (i > 22)
@@ -1489,7 +1488,7 @@ void	boolean_search (void)
 	    ,need_zero_permute
 	    ,do_stat_sort
 	    ,aa_maxhits
-	    ,usrblk.dblk->dbrec.or_maxdba
+	    ,(long) usrblk.dblk->dbrec.or_maxdba
 	    ,or_reccount
 	    ,or_recslots
 	    ,tot_addr_count
@@ -1520,16 +1519,16 @@ void	boolean_search (void)
     allocsz_needed = bitveclen * (saveusr.stemcount + 1);
     if (debugging_boolsrch)
 	fprintf (aa_stderr, PROGNAME"430 "
-	    "bitvecs[] alloc needed=%ld (bvln=%ld stems=%d+1), have=%ld.\n",
-	    allocsz_needed, bitveclen, saveusr.stemcount, bitvec_allocsz);
+	    "bitvecs[] alloc needed=%lu (bvln=%ld stems=%d+1), have=%lu.\n",
+	    (unsigned long) allocsz_needed, bitveclen, saveusr.stemcount, (unsigned long) bitvec_allocsz);
     if (bitvec_allocsz < allocsz_needed) {
 	if (bitvec_allocp)
 	    free (bitvec_allocp);
 	bitvec_allocp = austext_malloc (allocsz_needed + 16,
 	    PROGNAME"508", NULL);
 	if (debugging_boolsrch)
-	    fprintf (aa_stderr, PROGNAME"432 bitvecs[] realloc %ld-->%ld.\n",
-		bitvec_allocsz, allocsz_needed);
+	    fprintf (aa_stderr, PROGNAME"432 bitvecs[] realloc %lu-->%lu.\n",
+		(unsigned long) bitvec_allocsz, (unsigned long) allocsz_needed);
 	bitvec_allocsz = allocsz_needed;
     }
 
