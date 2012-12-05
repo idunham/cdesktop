@@ -37,6 +37,7 @@
 #include <Xm/MessageB.h>
 
 #include <Dt/Dt.h>
+#include <Dt/Wsm.h>
 #include <Dt/HelpDialog.h>
 
 #include "calctool.h"
@@ -67,9 +68,7 @@ static Widget GetHelpDialog     P(()) ;
 static void UnmanageCB          P(()) ;
 
 void
-Help(helpVolume, locationId)
-   char *helpVolume;
-   char *locationId;
+Help(char *helpVolume, char *locationId)
 {
     Arg args[10];
     Position newX, newY;
@@ -119,10 +118,7 @@ Help(helpVolume, locationId)
 }
 
 void
-HelpCloseCB(widget, client_data, call_data)
-Widget widget;
-caddr_t client_data, call_data;
-
+HelpCloseCB(Widget widget, caddr_t client_data, caddr_t call_data)
 {
 
   HelpStruct *pHelpCache = (HelpStruct *)client_data;
@@ -139,9 +135,7 @@ caddr_t client_data, call_data;
 }
 
 void 
-HelpHyperlinkCB(widget, client_data, call_data)
-Widget   widget;
-caddr_t  client_data, call_data;
+HelpHyperlinkCB(Widget widget, caddr_t client_data, caddr_t call_data)
 {
   DtHelpDialogCallbackStruct *pHyper = (DtHelpDialogCallbackStruct *) call_data;
   
@@ -157,9 +151,7 @@ caddr_t  client_data, call_data;
  
 
 void 
-HelpRequestCB(widget, client_data, call_data)
-Widget widget;
-caddr_t client_data, call_data;
+HelpRequestCB(Widget widget, caddr_t client_data, caddr_t call_data)
 {
   char  *helpVolume, *locationId;
   int   topic;
@@ -382,9 +374,7 @@ caddr_t client_data, call_data;
 }
 
 void
-HelpModeCB(w, client_data, call_data)
-Widget    w;
-caddr_t   client_data, call_data;
+HelpModeCB(Widget w, caddr_t client_data, caddr_t call_data)
 {
   Widget widget;
   char *errorMsg, *tmp;
@@ -414,9 +404,7 @@ caddr_t   client_data, call_data;
 }
 
 void
-DisplayHelp( helpVolume, locationId)
-char *helpVolume;
-char *locationId;
+DisplayHelp(char *helpVolume, char *locationId)
 {
     Arg args[10];
     int n;
@@ -436,7 +424,7 @@ char *locationId;
 
 
 static Widget
-GetHelpDialog()
+GetHelpDialog(void)
 {
     static HelpStruct       *pHelpCache;
 
@@ -493,9 +481,7 @@ GetHelpDialog()
 }
 
 void
-ErrDialog( errString, visualParent )
-char *errString ;
-Widget visualParent ;
+ErrDialog(char *errString, Widget visualParent)
 {
   int   n;
   Arg   args[10];
@@ -542,17 +528,13 @@ Widget visualParent ;
 }
 
 static void
-UnmanageCB(widget, client_data, call_data)
-Widget  widget;
-XtPointer client_data, call_data;
+UnmanageCB(Widget  widget, XtPointer client_data, XtPointer call_data)
 {
     XtUnmanageChild(widget);
 }
 
 void
-CenterMsgCB (widget, client_data, call_data)
-Widget          widget;
-XtPointer       client_data, call_data;
+CenterMsgCB (Widget widget, XtPointer client_data, XtPointer call_data)
 {
     int n;
     Position newX, newY;

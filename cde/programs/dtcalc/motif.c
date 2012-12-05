@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/param.h>
@@ -229,7 +230,6 @@ static void event_proc           P((Widget, XtPointer, XEvent *, Boolean *)) ;
 static void frame_interpose      P((Widget, XtPointer, XEvent *, Boolean *)) ;
 static void menu_handler         P((Widget, XtPointer, XEvent *, Boolean *)) ;
 static void popupHandler         P((Widget, XtPointer, XEvent *, Boolean *)) ;
-static void make_mode_frame      P((enum mode_type)) ;
 static void new_cf_value         P((Widget, XtPointer, XtPointer)) ;
 static void do_memory            P((Widget, XtPointer, XtPointer)) ;
 static void switch_mode          P((enum mode_type)) ;
@@ -244,6 +244,10 @@ static void setCalcHints         P(()) ;
 static char * _DtcalcStripSpaces P(( char * )) ;
 
 static void ProcessMotifSelection(Widget);
+static void create_menu_bar(Widget parent);
+static void init_colors(void);
+static void create_popup(Widget parent);
+
 
 extern char **environ ;
 
@@ -274,9 +278,7 @@ extern XtPointer _XmStringUngenerate (
                                 XmTextType output_type);
 
 int
-main(argc, argv)
-int argc ;
-char **argv ;
+main(int argc, char **argv)
 {
   Pixmap pixmap;
 
@@ -389,16 +391,14 @@ char **argv ;
 }
 
 void
-beep()
+beep(void)
 {
   ds_beep(X->dpy) ;
 }
 
 
 static Widget
-button_create(owner, row, column, maxrows, maxcols)
-Widget owner ;
-int row, column, maxrows, maxcols ;
+button_create(Widget owner, int row, int column, int maxrows, int maxcols)
 {
   int n = row * maxcols + column ;
   int val ;
@@ -493,9 +493,7 @@ int row, column, maxrows, maxcols ;
 
 
 static void
-dtcalc_initialize_rframe(owner, type)
-Widget owner ;
-int type ;
+dtcalc_initialize_rframe(Widget owner, int type)
 {
   char str[MAXLINE] ;
   int i ;
@@ -708,8 +706,7 @@ int type ;
 
 
 static void
-dtcalc_kkeyboard_create(owner)
-Widget owner ;
+dtcalc_kkeyboard_create(Widget owner)
 {
   int column, row ;
   Widget buttonFrame;
@@ -747,8 +744,7 @@ Widget owner ;
 
 
 static void
-dtcalc_kpanel_create(owner)
-Widget owner ;
+dtcalc_kpanel_create(Widget owner)
 {
   static char *mnames[] = { "base", "ttype", "num", "hyp",
                             "inv",  "op",  "mode" } ;
@@ -1181,16 +1177,14 @@ Widget owner ;
 
 /*ARGSUSED*/
 static void
-confirm_callback(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+confirm_callback(Widget widget, XtPointer client_data, XtPointer call_data)
 {
    update_cf_value();
 }
 
 
 static void
-create_cfframe()    /* Create auxiliary frame for CON/FUN key. */
+create_cfframe(void)    /* Create auxiliary frame for CON/FUN key. */
 {
   int j;
   XmString tstr ;
@@ -1341,11 +1335,9 @@ create_cfframe()    /* Create auxiliary frame for CON/FUN key. */
 }
 
 
+/* Create popup menu for dtcalc button. */
 static void
-create_menu(mtype, button, n)   /* Create popup menu for dtcalc button. */
-enum menu_type mtype ;
-Widget button ;
-int n ;
+create_menu(enum menu_type mtype, Widget button, int n)
 {
   char *mstr, *tmpStr, *ptr ;
   int i, invalid, val ;
@@ -1412,9 +1404,7 @@ int n ;
 
 /*ARGSUSED*/
 static void
-do_button(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+do_button(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   char *str;
   XmString cstr ;
@@ -1449,9 +1439,7 @@ XtPointer client_data, call_data ;
 
 /*ARGSUSED*/
 static void
-do_continue_notice(parent, str)
-Widget parent ;
-char *str ;
+do_continue_notice(Widget parent, char *str)
 {
   XmString contstr, message, cstr ;
   char *tmpStr;
@@ -1484,9 +1472,7 @@ char *str ;
 
 /*ARGSUSED*/
 static void
-do_confirm_notice(parent, str)
-Widget parent ;
-char *str ;
+do_confirm_notice(Widget parent, char *str)
 {
   XmString confirm, cancel, message, cstr ;
   char *tmpStr;
@@ -1523,9 +1509,7 @@ char *str ;
 
 /*ARGSUSED*/
 static void
-close_reg(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+close_reg(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   int type = (int)client_data;
 
@@ -1581,10 +1565,7 @@ XtPointer client_data, call_data ;
  *
  */
 void
-draw_button(n, fcptype, row, column, inverted)
-int n;
-enum fcp_type fcptype ;
-int row, column, inverted ;
+draw_button(int n, enum fcp_type fcptype, int row, int column, int inverted)
 {
   char str[10] ;
   Widget widget ;
@@ -1628,8 +1609,7 @@ int row, column, inverted ;
 
 
 static int
-event_is_keypad(xevent)
-XEvent *xevent ;
+event_is_keypad(XEvent *xevent)
 {
   if (xevent->type != KeyPress && xevent->type != KeyRelease) return(0) ;
   return(X->kparray[xevent->xkey.keycode - X->kcmin] > 0) ;
@@ -1645,11 +1625,7 @@ XEvent *xevent ;
  */
 /*ARGSUSED*/
 static void
-event_proc(widget, client_data, event, continue_to_dispatch)
-Widget widget ;
-XtPointer client_data ;
-XEvent *event ;
-Boolean *continue_to_dispatch ;
+event_proc(Widget widget, XtPointer client_data, XEvent *event, Boolean *continue_to_dispatch)
 {
   Widget w;
   Arg args[3];
@@ -1794,6 +1770,8 @@ Boolean *continue_to_dispatch ;
               v->cur_ch == KEY_E ||
               v->cur_ch == KEY_F)
                return;
+        default: /* HEX, allow all keys */
+          break;
       }
    }
 
@@ -1875,11 +1853,7 @@ ProcessMotifSelection(Widget W)
 
 /*ARGSUSED*/
 static void
-frame_interpose(widget, clientData, event, continue_to_dispatch)
-Widget widget ;
-XtPointer clientData ;
-XEvent *event ;
-Boolean *continue_to_dispatch ;
+frame_interpose(Widget widget, XtPointer clientData, XEvent *event, Boolean *continue_to_dispatch)
 {
   if (!v->started) return ;
   if (event->type == MapNotify)
@@ -1894,13 +1868,10 @@ Boolean *continue_to_dispatch ;
 
 /*ARGSUSED*/
 static int
-get_next_event(widget, ev_action, xevent)
-Widget widget ;
-int ev_action ;
-XEvent *xevent ;
+get_next_event(Widget widget, int ev_action, XEvent *xevent)
 {
   char *tmpStr, chs[2] ;
-  int cval, down, nextc, up ;
+  int cval = 0, down, nextc, up ;
   KeySym ksym;
   XKeyPressedEvent *key_event ;
 
@@ -2102,9 +2073,9 @@ XEvent *xevent ;
 }
 
 
+/* Get dtcalc resource from merged database. */
 char *
-get_resource(rtype)      /* Get dtcalc resource from merged database. */
-enum res_type rtype ;
+get_resource(enum res_type rtype) 
 {
   char str[MAXLINE] ;
 
@@ -2114,15 +2085,14 @@ enum res_type rtype ;
 
 
 void
-grey_button(row, column, state)
-int row, column, state ;
+grey_button(int row, int column, int state)
 {
   XtSetSensitive(X->kbuttons[row][column], !state) ;
 }
 
 
 void
-init_graphics()
+init_graphics(void)
 {
   char *tmpStr, *tmpStr1;
 
@@ -2151,15 +2121,14 @@ init_graphics()
 
 
 static int
-is_window_showing(widget)
-Widget widget ;
+is_window_showing(Widget widget)
 {
   return(XtIsManaged(widget)) ;
 }
 
 
 void
-key_init()
+key_init(void)
 {
   int i, j ;
   KeySym *tmp ;
@@ -2193,8 +2162,7 @@ key_init()
 
 
 static KeySym
-keypad_keysym(xevent)
-XEvent *xevent ;
+keypad_keysym(XEvent *xevent)
 {
   int i ;
   int keycode = xevent->xkey.keycode ;
@@ -2215,14 +2183,14 @@ XEvent *xevent ;
 }
 
 void
-load_resources()
+load_resources(void)
 {
   X->rDB = ds_load_resources(X->dpy) ;
 }
 
 
 void
-make_frames()
+make_frames(void)
 {
   char *tool_label = NULL ;
   int depth ;
@@ -2252,14 +2220,14 @@ make_frames()
 }
 
 void
-make_modewin()             /* Draw special mode frame plus buttons. */
+make_modewin(void)             /* Draw special mode frame plus buttons. */
 {
   switch_mode(v->modetype) ;
 }
 
+/* Calculate memory register frame values. */
 void
-make_registers(type)           /* Calculate memory register frame values. */
-int type;
+make_registers(int type)
 {
   char line[MAXLINE] ;     /* Current memory register line. */
   char *ptr, *tmp, *tmpStr;
@@ -2356,11 +2324,7 @@ int type;
 
 /*ARGSUSED*/
 static void
-menu_handler(widget, client_data, event, continue_to_dispatch)
-Widget widget ;
-XtPointer client_data ;
-XEvent *event ;
-Boolean *continue_to_dispatch ;
+menu_handler(Widget widget, XtPointer client_data, XEvent *event, Boolean *continue_to_dispatch)
 {
   int button ;
   Widget menu ;
@@ -2378,9 +2342,7 @@ Boolean *continue_to_dispatch ;
 
 /*ARGSUSED*/
 void
-menu_proc(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+menu_proc(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   int choice = ((int) client_data) & 0xFFFF ;
 
@@ -2391,9 +2353,7 @@ XtPointer client_data, call_data ;
 
 /*ARGSUSED*/
 static void
-new_cf_value(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+new_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
 {
     /*
       for hard testing when there is no Input Method available
@@ -2459,17 +2419,16 @@ XtPointer client_data, call_data ;
 }
 
 
+/* Put calc resource into database. */
 void
-put_resource(rtype, value)   /* Put calc resource into database. */
-enum res_type rtype ;
-char *value ;
+put_resource(enum res_type rtype, char *value)
 {
   ds_put_resource(&(X->dtcalcDB), v->appname, calc_res[(int) rtype], value) ;
 }
 
 
 void
-redraw_buttons()
+redraw_buttons(void)
 {
   enum fcp_type scurwin ;
   int column, n, row ;
@@ -2491,17 +2450,14 @@ redraw_buttons()
 
 
 void
-save_cmdline(argc, argv)
-int argc ;
-char *argv[] ;
+save_cmdline(int argc, char *argv[])
 {
   ds_save_cmdline(X->dpy, XtWindow(X->kframe), argc, argv) ;
 }
 
 
 void
-save_resources(filename)
-char *filename;
+save_resources(char *filename)
 {
   int reply = ds_save_resources(X->dtcalcDB, filename) ;
 
@@ -2509,16 +2465,13 @@ char *filename;
 }
 
 void
-ErrorDialog(string)
-char *string;
+ErrorDialog(char *string)
 {
    ErrDialog(string, X->mainWin);
 }
 
 void
-set_item(itemno, str)
-enum item_type itemno ;
-char *str ;
+set_item(enum item_type itemno, char *str)
 {
   Widget w ;
   XmString cstr ;
@@ -2559,12 +2512,11 @@ char *str ;
     }
 }
 
+/* Set new title for a window. */
 void
-set_title(fcptype, str)     /* Set new title for a window. */
-enum fcp_type fcptype ;
-char *str ;
+set_title(enum fcp_type fcptype, char *str)
 {
-  Widget w ;
+  Widget w;
   XmString cstr ;
 
 
@@ -2576,6 +2528,10 @@ char *str ;
     w = X->frframe ;
   else if (fcptype == FCP_MODE)
     w = X->mframe[(int) v->modetype] ;
+  else {
+    fprintf(stderr, "Unknown fcptype %d in set_title\n", fcptype);
+    return;
+  }
 
   if (fcptype == FCP_KEY)
     XtVaSetValues(w, XmNtitle, str, NULL) ;
@@ -2590,9 +2546,7 @@ char *str ;
 
 /*ARGSUSED*/
 void
-show_ascii(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+show_ascii(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   char *str ;
   int val ;
@@ -2606,7 +2560,7 @@ XtPointer client_data, call_data ;
 
 
 void
-show_ascii_frame()      /* Display ASCII popup. */
+show_ascii_frame(void)      /* Display ASCII popup. */
 {
   int j;
   XmString tstr ;
@@ -2726,7 +2680,7 @@ show_ascii_frame()      /* Display ASCII popup. */
 
 
 void
-start_tool()
+start_tool(void)
 {
   saveatom = XmInternAtom(X->dpy, "WM_SAVE_YOURSELF", FALSE) ;
   command_atom = XA_WM_COMMAND;
@@ -2747,8 +2701,7 @@ start_tool()
 }
 
 void
-clear_buttons( start )
-int start;
+clear_buttons(int start)
 {
   int i, n;
   int row, column;
@@ -2824,7 +2777,7 @@ int start;
 }
 
 void
-make_buttons_fin()
+make_buttons_fin(void)
 {
   int i, n;
   int row, column;
@@ -2877,7 +2830,7 @@ make_buttons_fin()
 }
 
 void
-make_buttons_log()
+make_buttons_log(void)
 {
   int i, n;
   int row, column;
@@ -2930,7 +2883,7 @@ make_buttons_log()
 }
 
 void
-make_buttons_sci()
+make_buttons_sci(void)
 {
   int i, n;
   int row, column;
@@ -2984,8 +2937,7 @@ make_buttons_sci()
 
 
 static void
-switch_mode(curmode)
-enum mode_type curmode ;
+switch_mode(enum mode_type curmode)
 {
   Arg args[2];
 
@@ -3019,7 +2971,7 @@ enum mode_type curmode ;
 
 
 static void
-update_cf_value()
+update_cf_value(void)
 {
   char message[MAXLINE] ;
   char str[MAXLINE] ;          /* Temporary buffer for various strings. */
@@ -3181,6 +3133,8 @@ update_cf_value()
                    }
                    else
                       STRCPY(v->fun_names[X->cfno], "");
+                   break;
+      default : break;
     }
 
   XtDestroyWidget(X->menus[(int) X->CFtype]) ;
@@ -3196,6 +3150,8 @@ update_cf_value()
       case M_FUN :
                    write_rcfile(X->CFtype, X->cfexists, X->cfno,
                                                         X->vval, X->dval) ;
+                   break ;
+      default : break;
     }
 
   ignore_event = True;
@@ -3206,11 +3162,9 @@ update_cf_value()
 
 
 void
-win_display(fcptype, state)
-enum fcp_type fcptype ;
-int state ;
+win_display(enum fcp_type fcptype, int state)
 {
-  Widget widget ;
+  Widget widget = NULL;
   Position newX, newY;
   Arg args[3];
 
@@ -3250,9 +3204,7 @@ int state ;
 
 /*ARGSUSED*/
 void
-write_cf_value(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+write_cf_value(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   char message[MAXLINE] ;
   char str[MAXLINE] ;          /* Temporary buffer for various strings. */
@@ -3302,6 +3254,8 @@ XtPointer client_data, call_data ;
       case M_CON : X->cfexists = 1 ;    /* Always the default constants. */
                    break ;
       case M_FUN : if (strlen(v->fun_vals[X->cfno])) X->cfexists = 1 ;
+                   break;
+      default : break;
     }
   if (X->cfexists)
     {
@@ -3324,9 +3278,7 @@ XtPointer client_data, call_data ;
 
 
 static void
-xerror_interpose(display, error)
-Display *display ;
-XErrorEvent *error ;
+xerror_interpose(Display *display, XErrorEvent *error)
 {
   char msg1[80];
   char msg[1024];
@@ -3338,9 +3290,7 @@ XErrorEvent *error ;
 }
 
 static void
-modelineValueChanged(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+modelineValueChanged(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   Arg args[1];
   int val, choice;
@@ -3361,8 +3311,8 @@ XtPointer client_data, call_data ;
      handle_menu_selection(59, choice) ;
 }
 
-create_menu_bar(parent)
-Widget parent;
+static void
+create_menu_bar(Widget parent)
 {
    register int n;
    int count;
@@ -3612,8 +3562,8 @@ Widget parent;
 
 }
 
-
-init_colors()
+static void
+init_colors(void)
 {
     int         colorUse;
     short       act, inact, prim, second;
@@ -3632,10 +3582,7 @@ init_colors()
 }
 
 static void
-do_memory( w, client_data, call_data )
-Widget w ;
-XtPointer client_data ;
-XtPointer call_data ;
+do_memory(Widget w, XtPointer client_data, XtPointer call_data)
 {
   int type = (int)client_data;
 
@@ -3663,7 +3610,7 @@ XtPointer call_data ;
 }
 
 void
-read_resources()    /* Read all possible resources from the database. */
+read_resources(void)    /* Read all possible resources from the database. */
 {
   char str[MAXLINE] ;
   char *msg;
@@ -3754,9 +3701,7 @@ read_resources()    /* Read all possible resources from the database. */
 }
 
 void
-close_cf(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+close_cf(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   Arg args[1];
 
@@ -3770,9 +3715,7 @@ XtPointer client_data, call_data ;
 }
 
 void
-close_ascii(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+close_ascii(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   XtUnmanageChild(X->Aframe) ;
   ignore_event = True;
@@ -3781,9 +3724,7 @@ XtPointer client_data, call_data ;
 }
 
 void
-FocusInCB(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+FocusInCB(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   Arg args[1];
 
@@ -3795,9 +3736,7 @@ XtPointer client_data, call_data ;
 }
 
 void
-move_cf(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+move_cf(Widget widget, XtPointer client_data, XtPointer call_data)
 {
   char *input;
   int value;
@@ -3836,13 +3775,13 @@ XtPointer client_data, call_data ;
 			     TimerEvent, (XtPointer) value);
 }
 
-create_popup(parent)
-Widget parent;
+static void
+create_popup(Widget parent)
 {
   char *mnemonic;
   XmString label;
   Widget dummyHelp1, dummyHelp2, memRegs;
-  Widget help, helpI, helpToc, helpT, helpR, helpO, helpU, helpV;
+  Widget helpI, helpToc, helpT, helpR, helpO, helpU, helpV;
 
   X->popupMenu = XmCreatePopupMenu(parent, "popup", NULL, 0) ;
   XtCreateManagedWidget(GETMESSAGE(2, 46,"Calculator Popup"),
@@ -4039,7 +3978,7 @@ Widget parent;
 
   mnemonic = GETMESSAGE(2, 17, "H");
   label = XmStringCreateLocalized ( GETMESSAGE(2, 18, "Help") );
-  help = XtVaCreateManagedWidget("help",
+  XtVaCreateManagedWidget("help",
 		xmCascadeButtonGadgetClass,  X->popupMenu,
 		XmNsubMenuId, 		    dummyHelp2,
 		XmNmnemonic,		    XStringToKeysym( mnemonic ),
@@ -4070,11 +4009,7 @@ Widget parent;
 }
 
 static void
-popupHandler(widget, client_data, event, continue_to_dispatch)
-Widget widget ;
-XtPointer client_data ;
-XEvent *event ;
-Boolean *continue_to_dispatch ;
+popupHandler(Widget widget, XtPointer client_data, XEvent *event, Boolean *continue_to_dispatch)
 {
   XButtonPressedEvent *bevent;
 
@@ -4145,9 +4080,7 @@ Boolean *continue_to_dispatch ;
 }
 
 void
-set_option_menu(type, base)
-int type;
-int base;
+set_option_menu(int type, int base)
 {
     Arg args[1];
 
@@ -4161,17 +4094,13 @@ int base;
 }
 
 void
-map_popup(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data, call_data ;
+map_popup(Widget widget, XtPointer client_data, XtPointer call_data)
 {
    XmAnyCallbackStruct * callback;
    XEvent * event;
-   XKeyPressedEvent *key_event ;
 
    callback = (XmAnyCallbackStruct *) call_data;
    event = (XEvent *) callback->event;
-   key_event = (XKeyPressedEvent *) event ;
 
    if(event->type != KeyRelease)
       return;
@@ -4182,10 +4111,7 @@ XtPointer client_data, call_data ;
 
 /*ARGSUSED*/
 static void
-save_state(widget, client_data, call_data)
-Widget widget ;
-XtPointer client_data ;
-XtPointer call_data ;
+save_state(Widget widget, XtPointer client_data, XtPointer call_data)
 {
    char *full_path = NULL;
    char *file_name = NULL;
@@ -4256,9 +4182,7 @@ XtPointer call_data ;
 }
 
 static void
-SaveSession( path, file_name )
-        char *path ;
-        char *file_name ;
+SaveSession(char *path, char *file_name)
 {
    int fd;
    Atom * ws_presence = NULL;
@@ -4377,7 +4301,7 @@ SaveSession( path, file_name )
 }
 
 void
-RestoreSession()
+RestoreSession(void)
 {
    Boolean status=False;
    char *path, *msg;
@@ -4561,7 +4485,7 @@ RestoreSession()
 }
 
 static void
-setCalcHints()
+setCalcHints(void)
 {
    char *ptr;
    Atom * workspace_atoms = NULL;
@@ -4627,9 +4551,7 @@ setCalcHints()
 }
 
 void
-TimerEvent( client_data, id )
-        XtPointer client_data;
-        XtIntervalId *id;
+TimerEvent( XtPointer client_data, XtIntervalId *id)
 {
   Arg args[1];
 
@@ -4645,7 +4567,7 @@ TimerEvent( client_data, id )
 /* #ifdef hpux */
 #ifdef HP_EXTENSIONS
 static int
-GetKeyboardID()
+GetKeyboardID(void)
 {
     XHPDeviceList *list, *slist;
     int ndevices = 0, i, kbd = 0;
@@ -4700,8 +4622,7 @@ GetKeyboardID()
 #endif
 
 static char *
-_DtcalcStripSpaces(file)
-char *file;
+_DtcalcStripSpaces(char *file)
 {
    int i, j;
 
