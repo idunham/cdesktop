@@ -65,7 +65,7 @@
 # include <signal.h>
 # include <X11/Xatom.h>
 # include <setjmp.h>
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && OSMAJORVERSION > 8
 # include <utmpx.h>
 #else
 # include <utmp.h>
@@ -1652,6 +1652,12 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
             failsafeArgv[i++] = "/usr/X/bin/xterm";
 #elif defined(__hpux)
 	    failsafeArgv[i++] = "/usr/bin/X11/hpterm";
+#elif defined(__OpenBSD__)
+	    failsafeArgv[i++] = "/usr/X11R6/bin/xterm";
+#elif defined(__NetBSD__)
+	    failsafeArgv[i++] = "/usr/X11R7/bin/xterm";
+#elif defined(__FreeBSD__)
+	    failsafeArgv[i++] = "/usr/local/bin/xterm";
 #else
 	    failsafeArgv[i++] = "/usr/bin/X11/xterm";
 #endif

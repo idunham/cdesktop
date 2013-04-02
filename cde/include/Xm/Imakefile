@@ -12,8 +12,11 @@ ALLHEADERS = *.h
 
 BuildIncludes($(HEADERS),Xm,..)
 
-XmPrivate.h: extractprototype.awk
-	awk -f extractprototype.awk $(MLIBSRC)/Xm/$(ALLHEADERS) > $@
+XCOMM XmPrivate must be generated manually.  For this you work, you must have
+XCOMM a freshly compiled openmotif tree, and MLIBSRC must be pointing to it.
+
+XmPrivate.h: 
+	awk -f extractprototype.awk $(MLIBSRC)/Xm/$(ALLHEADERS) > $@ || rm -f $@
 
 depend::
 

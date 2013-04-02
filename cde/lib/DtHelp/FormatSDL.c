@@ -4354,6 +4354,13 @@ FindSnbEntry(
     return NULL;
 }
 
+/* A little helper function, acts like strcpy
+ * but safe for overlapping regions.
+ */
+static void *strmove(void *dest, const void *src) {
+    memmove(dest, src, strlen(src) + 1);
+}
+
 /******************************************************************************
  * Function:    static int ProcessString(string, int idx);
  *
@@ -4391,7 +4398,7 @@ ProcessString(
 
     if (cpy_str == True)
       {
-        strcpy (string, &string[*idx+1]);
+        strmove (string, &string[*idx+1]);
         *idx = -1;
       }
     return 0;
@@ -4413,7 +4420,6 @@ CompressLinkSeg(
     _DtCvSegment *p_seg)
 {
     void    *pChar;
-    wchar_t  fChar;
     int      wcFlag;
 
     /*
@@ -4451,10 +4457,9 @@ CompressLinkSeg(
 	     * the string.
 	     */
 	    if (_DtCvIsSegRegChar(p_seg))
-		strcpy(((char *)pChar), &(((char *)pChar)[1]));
+		strmove(((char *)pChar), &(((char *)pChar)[1]));
 	    else
 	      {
-		int i;
 		wchar_t *wcChar = (wchar_t *) pChar;
 
 		while (0 != wcChar[0])
@@ -4496,7 +4501,7 @@ ProcessNonBreakChar(
         return -1;
 
     my_struct->flags = my_struct->flags & ~(_DtCvNON_BREAK);
-    strcpy (string, &string[*idx+1]);
+    strmove (string, &string[*idx+1]);
     *idx = -1;
     return 0;
 }
@@ -6983,6 +6988,7 @@ OnlyOneEach(
 
 } /* End OnlyOneEach */
 
+
 /******************************************************************************
  * Function:    int Cdata (FormatStruct my_struct,
  *					int cur_element, exceptions);
@@ -7063,7 +7069,7 @@ Cdata(
     
                 if (string[i] == '&')
                   {
-                    strcpy (&string[i], &string[i+1]);
+                    strmove (&string[i], &string[i+1]);
                     if (string[i] == '\0')
                       {
                         string[i] = BufFileGet(my_struct->my_file);
@@ -7154,7 +7160,7 @@ Cdata(
 			 * and copy the rest of the string to after it.
 			 */
 			string[j-1] = (char) value;
-                        strcpy (&string[j], &string[i]);
+                        strmove (&string[j], &string[i]);
 			i = j;
 		      }
 
@@ -7194,7 +7200,7 @@ Cdata(
                         if (my_struct->last_was_space == False)
 			    my_struct->last_was_nl = True;
 
-                        strcpy (&string[i], &string[i+1]);
+                        strmove (&string[i], &string[i+1]);
                       }
                     else
                       {
@@ -7208,7 +7214,7 @@ Cdata(
                             return -1;
                           }
     
-                        strcpy (string, &string[i+1]);
+                        strmove (string, &string[i+1]);
                         i = 0;
                       }
                   }
@@ -7217,7 +7223,7 @@ Cdata(
                     if (False == my_struct->save_blank &&
 			type != SdlTypeLiteral && type != SdlTypeUnlinedLiteral
 					&& my_struct->last_was_space == True)
-                        strcpy (&string[i], &string[i+1]);
+                        strmove (&string[i], &string[i+1]);
                     else
                         i++;
                     my_struct->last_was_space = True;
@@ -7242,7 +7248,7 @@ Cdata(
 		    else /* the last was a multibyte character, tighten up */
 		      {
 			i--;
-			strcpy (&string[i], &string[i+1]);
+			strmove (&string[i], &string[i+1]);
 		      }
 		  }
 
@@ -10098,7 +10104,6 @@ _DtHelpCeFrmtSDLVolTitleToAscii(
 {
     char		*abbrev  = NULL;
     int			 result  = 0;
-    int			 done    = 0;
     _DtCvSegment	*pHeadSeg;
     _DtHelpCeLockInfo    lockInfo;
 

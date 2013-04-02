@@ -59,7 +59,6 @@
 #include <Xm/MwmUtil.h>
 
 #include <Xm/MessageB.h>
-#include <X11/keysymdef.h>
 #include <X11/Shell.h>
 #include <X11/Intrinsic.h>
 #include <X11/cursorfont.h>
@@ -124,7 +123,7 @@ static void  CloseDefBoxCB(
 #define HUSET 8     /* message catalog set */
 
 /******** static variables ********/
-static char DirSlash[] = "/";
+
 
 /******** data structures ********/
 typedef struct ExecContext 
@@ -866,7 +865,6 @@ int _DtHelpFilterExecCmd(
    XmString labelString2;
    Widget  noexecBtn;
    Widget  execBtn;
-   Cursor  cursor;
 
    goodCmd = _DtHelpFilterExecCmdStr(helpWidget, executionPolicy, 
                  commandStr, &filteredCmdStr, &invalidAlias, 
@@ -1004,7 +1002,6 @@ void _DtHelpExecFilteredCmd(
    Boolean queryNeeded;
    char *  filteredCmdStr = NULL;
    ExecContext * execContext;
-   DtHelpListStruct *pHelpInfo;
    XmString labelString;
    XmString labelString2;
    Widget   msgDlg;
@@ -1024,7 +1021,9 @@ void _DtHelpExecFilteredCmd(
    following code can fail on IBM platform when XTHREADS and XUSE_MTSAFE_API
    are defined.
 */
+/*
    _Xgetpwparams pwd_buf;
+*/
    struct passwd * pwd_ret;
 
   /** -------------------------------------------------------------- *
@@ -1161,7 +1160,7 @@ static Widget  LocateWidgetId(
     Widget           shellWidget,
     Cursor           cursorIn)
 {
-    static Cursor    DfltOnItemCursor = NULL;
+    static Cursor    DfltOnItemCursor = 0;
     Widget           widget;
     Widget           child;
     CompositeWidget  comp_widget;
@@ -1180,7 +1179,7 @@ static Widget  LocateWidgetId(
 
  
     /* Make the target cursor */
-    if (cursorIn != NULL)
+    if (cursorIn != 0)
         cursor = cursorIn;
     else
 #if 0
@@ -1188,7 +1187,7 @@ static Widget  LocateWidgetId(
 #else
     {
         _DtHelpProcessLock();
-        if (NULL == DfltOnItemCursor)
+        if (0 == DfltOnItemCursor)
         {
             char        *bits;
             char        *maskBits;

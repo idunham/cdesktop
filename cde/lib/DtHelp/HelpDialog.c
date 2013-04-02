@@ -2121,7 +2121,6 @@ void _DtHelpUpdateDisplayArea(
    char          *userErrorStr=NULL;
    char          *sysErrorStr=NULL;
    char          *tmpMsg=NULL;
-   char	         *retTitle;
    XmString      labelString;
    Arg		 args[10];
    int      	 n=0;
@@ -3089,7 +3088,7 @@ static void CloseHelpCB (
        callDataInfo.locationId = NULL;
        callDataInfo.helpVolume = NULL;
        callDataInfo.specification = NULL;
-       callDataInfo.hyperType = NULL;
+       callDataInfo.hyperType = 0;
    
        
        /* All we do is envoke the applications close callback */

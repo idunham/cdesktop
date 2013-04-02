@@ -452,7 +452,8 @@ ButtonCB(
 {
   DtDialogBoxCallbackStruct *cb     
            = (DtDialogBoxCallbackStruct *) call_data;
-  int      n, len, items;
+  int      n, len;
+  XtArgVal items;
   char	   *str, *fntstr, *fntsetstr;
   Arg      args[MAX_ARGS];
   char     fontres[8192];
@@ -685,7 +686,7 @@ restoreFonts(
     XrmValue value;
 
     xrm_name [0] = XrmStringToQuark ("Fonts");
-    xrm_name [2] = NULL;
+    xrm_name [2] = 0;
 
     /* get x position */
     xrm_name [1] = XrmStringToQuark ("x");

@@ -73,6 +73,7 @@
 
 
 #include <Dt/DtNlUtils.h>
+#include <Dt/SharedProcs.h>
 
 #include "Encaps.h"
 #include "FileMgr.h"
@@ -174,7 +175,7 @@ replace_rename_ok_callback(
    char         *newFileName = NULL;
    int          newFileDirLen;
    int          rename_rc;
-   Boolean      same = (Boolean)client_data;
+   Boolean      same = (Boolean)(XtArgVal)client_data;
 
    /* if same is true, then the object is tring to be copied into the same
     * folder as itself.  So the existing files stay the same and the new files
@@ -440,7 +441,7 @@ replace_rename_radio_callback(
 
 
    if (state->set)
-      switch ((int) client_data)
+      switch ((int)(XtArgVal) client_data)
       {
         case RADIO_REPLACE:
            XtVaSetValues (G_rename_text,
@@ -588,7 +589,7 @@ multicollide_ok_callback(
    struct stat  buf;
 
 
-   Boolean      same = (Boolean)client_data;
+   Boolean      same = (Boolean)(XtArgVal)client_data;
 
    /* if same is true, then the object is tring to be copied into the same
     * folder as itself.  So the existing files stay the same and the new files
@@ -1756,9 +1757,12 @@ Create_Action_Area(
 
        if (i == actions.defaultAction)
          {
+            XtArgVal heightptr;
             Dimension height, h;
-            XtVaGetValues (action_area, XmNmarginHeight, &h, NULL);
-            XtVaGetValues (widget, XmNheight, &height, NULL);
+            XtVaGetValues (action_area, XmNmarginHeight, &heightptr, NULL);
+            height = (Dimension)heightptr;
+            XtVaGetValues (widget, XmNheight, &heightptr, NULL);
+            h = (Dimension)heightptr;
 
             height +=2 * h;
             XtVaSetValues (action_area,

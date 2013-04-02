@@ -750,7 +750,6 @@ static int HitTopicsDisplay (
 {
     XmString * pTopicString;
     XmString prefixString;
-    XmString labelString;
     XmString *items;
     char *   tmpStr;
     int      i;
@@ -4922,10 +4921,12 @@ void _DtHelpGlobSrchDisplayDialog(
    DtHelpDialogWidget hw = (DtHelpDialogWidget) w;
    XmToggleButtonCallbackStruct status;        /* the call data */
    Widget                       sourceBtn;     /* widget owning event */
+#if 0
    Dimension     height;
    Dimension     width;
-   XmString      labelString = NULL;
    int           n;
+#endif
+   XmString      labelString = NULL;
    Arg           args[10];
 
    /* make the dialog itself */
@@ -5195,7 +5196,7 @@ void  _DtHelpGlobSrchInitVars(
     srch->curVolRadBtnSens = False;
     srch->volLeftCnt    = 0;
     srch->volListHead   = NULL; 	/* info on search topics found */
-    srch->workProcId    = NULL;
+    srch->workProcId    = 0;
 }
 
 

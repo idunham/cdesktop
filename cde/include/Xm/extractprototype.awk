@@ -24,6 +24,7 @@ function proto() {
 				printf("/* Extracted from %s */\n", n);
 				curfile = FILENAME;
 			}
+			sub(/[ \t]*$/, "", line);
 			print line;
 			getline;
 			if ( pattern == 0) {
@@ -45,6 +46,7 @@ function proto() {
 /_XmLeaveGadget/ { proto(); }
 /_XmPushWidgetExtData/ { proto(); }
 /_XmPopWidgetExtData/ { proto(); }
+/_XmGetWidgetExtData/ { proto(); }
 /_XmGadgetImportSecondaryArgs/ { proto(); }
 /_XmExtImportArgs/ { proto(); }
 /_XmExtGetValuesHook/ { proto(); }
@@ -52,6 +54,11 @@ function proto() {
 /_XmFocusInGadget/ { proto(); }
 /_XmFocusOutGadget/ { proto(); }
 /_XmIsEventUnique/ { proto(); }
+/_XmRecordEvent/ { proto(); }
 /_XmSetInDragMode/ { proto(); }
 /_XmStringSourceGetString/ { proto(); }
+/_XmStringUngenerate/ { proto(); }
 /_XmShellIsExclusive/ { proto(); }
+/_XmTextFieldSetDestination/ { proto(); }
+/_XmGetActiveTopLevelMenu/ { proto(); }
+/XmeFlushIconFileCache/ { proto(); }

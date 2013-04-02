@@ -196,7 +196,6 @@ static void InitialPopupCB(
 
 
 /* Static variables */
-static char helpOnHelp[] = "Help4Help";
 
 
 /* Supported resources for the HelpQuickDialog Widget */
@@ -2535,7 +2534,7 @@ static void CloseQuickCB (
        callDataInfo.locationId = NULL;
        callDataInfo.helpVolume = NULL;
        callDataInfo.specification = NULL;
-       callDataInfo.hyperType = NULL;
+       callDataInfo.hyperType = 0;
           
        /* All we do is envoke the applications close callback */
        XtCallCallbackList((Widget)qw,qw->qhelp_dialog.qhelp.closeCallback,

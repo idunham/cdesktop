@@ -95,6 +95,8 @@
 
 #include <Dt/DtP.h>
 #include <Dt/DtNlUtils.h>
+#include <Dt/Dts.h>
+#include <Dt/SharedProcs.h>
 
 #include "Encaps.h"
 #include "SharedProcs.h"
@@ -137,6 +139,8 @@ static DialogResource resources[] =
 
 #define FM_TYPE_LABEL  "TYPE_LABEL"
 
+/********    Forward Function Declaration    ********/
+int ReadInFiletypes(FilterData *filter_data);
 
 /********    Static Function Declarations    ********/
 
@@ -1387,7 +1391,7 @@ ShowHiddenFiles (
    Widget mbar;
    Arg args[1];
 
-   if ((int)client_data == FM_POPUP)
+   if ((XtArgVal)client_data == FM_POPUP)
      mbar = XtParent(w);
    else
      mbar = (Widget)XmGetPostedFromWidget(XtParent(w));

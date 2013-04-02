@@ -83,25 +83,21 @@
 #include <Xm/AtomMgr.h>
 #include <Xm/MwmUtil.h>
 #include <Xm/VendorSEP.h>
+#include <Xm/XmPrivate.h> /* _XmStringUngenerate, _XmGetWidgetExtData */
 #include <X11/ShellP.h>
 #include <X11/Shell.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/Intrinsic.h>
-/* Copied from Xm/BaseClassI.h */
-extern XmWidgetExtData _XmGetWidgetExtData(
-                        Widget widget,
-#if NeedWidePrototypes
-                        unsigned int extType) ;
-#else
-                        unsigned char extType) ;
-#endif /* NeedWidePrototypes */
 
 #include <Dt/Wsm.h>
 #include <Dt/DtNlUtils.h>
 
 #include "Encaps.h"
+#include "Desktop.h"
 #include "Filter.h"
+#include "FileMgr.h"
+#include "Main.h"
 #include "ModAttr.h"
 
 
@@ -1253,22 +1249,22 @@ IntDialogGetResources(
       {
          if (resource->size == sizeof(char))
          {
-            charVal = (char)resource->default_value;
+            charVal = (char)(XtArgVal)resource->default_value;
             convertedValue.addr = (caddr_t) &charVal;
          }
          else if (resource->size == sizeof(short))
          {
-            shortVal = (short)resource->default_value;
+            shortVal = (short)(XtArgVal)resource->default_value;
             convertedValue.addr = (caddr_t) &shortVal;
          }
          else if (resource->size == sizeof(int))
          {
-            intVal = (int)resource->default_value;
+            intVal = (int)(XtArgVal)resource->default_value;
             convertedValue.addr = (caddr_t) &intVal;
          }
          else
          {
-            longVal = (long)resource->default_value;
+            longVal = (long)(XtArgVal)resource->default_value;
             convertedValue.addr = (caddr_t) &longVal;
          }
       }

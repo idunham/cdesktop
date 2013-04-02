@@ -323,7 +323,7 @@ Help(
  *****************************************************************************/
 
 static void
-#if defined(__aix) || defined (__osf__) || defined(__FreeBSD__) || defined(linux)
+#if defined(__aix) || defined (__osf__) || defined(CSRG_BASED) || defined(linux)
 PanicSignal(int s)
 #else
 PanicSignal(void)
@@ -360,7 +360,7 @@ PanicSignal(void)
  *****************************************************************************/
 
 static void
-#if defined(__aix) || defined (__osf__) || defined(__FreeBSD__) || defined(linux)
+#if defined(__aix) || defined (__osf__) || defined(CSRG_BASED) || defined(linux)
 IgnoreSignal(int i)
 #else
 IgnoreSignal(void)
@@ -402,7 +402,7 @@ IgnoreSignal(void)
  *****************************************************************************/
 
 static void
-#if defined(__aix) || defined (__osf__) || defined(__FreeBSD__) || defined(linux)
+#if defined(__aix) || defined (__osf__) || defined(CSRG_BASED) || defined(linux)
 UrgentSignal(int i)
 #else
 UrgentSignal(void)
@@ -453,7 +453,7 @@ UrgentSignal(void)
  *
  *****************************************************************************/
 static void
-#if defined(__aix) || defined (__osf__) || defined(__FreeBSD__) || defined(linux)
+#if defined(__aix) || defined (__osf__) || defined(CSRG_BASED) || defined(linux)
 SigCld(int i)
 #else
 SigCld(void)
@@ -1163,7 +1163,6 @@ main (
     int    junki,i;
     char  *tmpBuffer;
     int    errorBytes;
-    struct stat statBuffer;
     int    firstPass, tmpi;
     char  *tmpProgName = NULL;
 
@@ -1390,28 +1389,31 @@ main (
 		    firstPass = 1;
 
 		    while (1) {
-			if ( fstat(errorpipeG[0], &statBuffer) ) {
-			    break;
+			char buf;
+			nfound =select(MAXSOCKS, FD_SET_CAST(&readfds), FD_SET_CAST(NULL),
+			     FD_SET_CAST(NULL), &timeoutShort);
+			if (nfound > 0) {
+			    tmpi = read (errorpipeG[0], &buf, 1);
+			} else {
+			    tmpi = 0;
 			}
-			else if ( statBuffer.st_size > 0 ) {
+
+			if ( tmpi > 0 ) {
 			    /*
 			     * Grow buffer to hold entire error stream.
 			     */
 			    firstPass = 0;
 			    if (tmpBuffer == NULL)
 				tmpBuffer = (char *) malloc(
-						statBuffer.st_size + 1);
+						tmpi + 1);
 			    else
 				tmpBuffer = (char *) realloc( tmpBuffer,
-						errorBytes +
-						statBuffer.st_size + 1);
+						errorBytes + tmpi + 1);
 			    /*
 			     * Drain error pipe.
 			     */
-			    tmpi = read (errorpipeG[0], &tmpBuffer[errorBytes],
-						statBuffer.st_size);
-			    if (tmpi > 0)			/* else let fstat() redetect problem */
-				errorBytes += tmpi;
+			    tmpBuffer[errorBytes] = buf;
+			    errorBytes += tmpi;
 			    tmpBuffer[errorBytes] = '\0';
 
 			    if (errorBytes < 65535) {
@@ -1523,7 +1525,7 @@ main (
 		 * a SIGCLD, give up and exit.
 		 */
 		if (rediscoverUrgentSigG > ((1000/SHORT_SELECT_TIMEOUT)*5) ) {
-#if defined(__aix) || defined (__osf__) || defined(__FreeBSD__) || defined(linux)
+#if defined(__aix) || defined (__osf__) || defined(CSRG_BASED) || defined(linux)
 		    PanicSignal(0);
 #else
 		    PanicSignal();

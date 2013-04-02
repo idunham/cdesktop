@@ -45,9 +45,7 @@
 #endif /*LINT_CAST*/
 
 struct tW_struct *
-make_textW(owner, label)
-Widget owner ;
-char *label ;
+make_textW(Widget owner, char *label)
 {
   struct tW_struct *w ;
  
@@ -73,10 +71,7 @@ char *label ;
 }
 
 void
-set_text_str(w, ttype, str)
-struct tW_struct *w ;
-enum text_type ttype ;
-char *str ;
+set_text_str(struct tW_struct *w, enum text_type ttype, char *str)
 {
   XmString cstr ;
 
@@ -87,5 +82,7 @@ char *str ;
                      XmStringFree(cstr) ;
                      break ;
       case T_VALUE : XmTextFieldSetString(w->textfield, str) ;
+                     break ;
+      default : break ;
     }
 }

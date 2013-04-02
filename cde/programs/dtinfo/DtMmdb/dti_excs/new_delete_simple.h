@@ -54,7 +54,8 @@ void class_name::operator delete( void* p )\
 
 
 #else
-#include <new.h>
+#include <new>
+using namespace std;
 #endif
 
 

@@ -2068,7 +2068,7 @@ _DtHelpDALoadGraphic (
     if (fileName != file_xid)
 	free (fileName);
 
-    if (pGS->pix == NULL)
+    if (pGS->pix == 0)
       {
 	free(pReg);
 	free(pGS);
@@ -2108,7 +2108,6 @@ _DtHelpDADestroyGraphic (
     _DtCvPointer	graphic_ptr )
 {
     Arg   args[5];
-    int	  i;
 
     Colormap colormap;
 
@@ -2179,7 +2178,6 @@ _DtHelpDADestroyRegion (
     _DtCvPointer	client_data,
     _DtCvPointer	reg_info)
 {
-    DtHelpDispAreaStruct *pDAS = (DtHelpDispAreaStruct *) client_data;
     _DtHelpDARegion      *pReg = (_DtHelpDARegion *) reg_info;
 
     if (True == pReg->inited)

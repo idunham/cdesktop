@@ -116,7 +116,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 
-#ifdef __osf__
+#if defined(__osf__) || defined(__OpenBSD__)
 #include <sys/wait.h>
 #endif /* __osf__ */
 
@@ -138,6 +138,7 @@
 #include <Xm/RowColumn.h>
 #include <Xm/MwmUtil.h>
 
+#include <Xm/IconFileP.h>
 #include <Dt/Icon.h>
 #include <Dt/IconP.h>
 #include <Dt/IconFile.h>
@@ -151,11 +152,11 @@
 #include <X11/Shell.h>
 #include <X11/Xatom.h>
 #include <Xm/Protocols.h>
-#include <X11/keysymdef.h>
 #ifdef HAVE_EDITRES
 #include <X11/Xmu/Editres.h>
 #endif
 #include <Dt/Session.h>
+#include <Dt/Dt.h>
 #include <Dt/DtP.h>
 #include <Dt/Connect.h>
 #include <Dt/FileM.h>
@@ -168,6 +169,7 @@
 #include <Dt/CommandM.h>
 #include <Dt/EnvControlP.h>
 #include <Dt/Dts.h>
+#include <Dt/SharedProcs.h>
 
 #include "Encaps.h"
 #include "SharedProcs.h"
@@ -184,6 +186,24 @@
 #include "Filter.h"
 #include "Find.h"
 #include "ModAttr.h"
+
+/* From Command.c */
+extern void MoveCopyLinkHandler(Tt_message ttMsg, int opType);
+
+/* From Desktop.c */
+extern void PutOnWorkspaceHandler(Tt_message ttMsg);
+
+/* From Filter.c */
+extern void UpdateFilterAfterDBReread (DialogData * dialog_data);
+
+/* From ToolTalk.c */
+extern int InitializeToolTalkSession( Widget topLevel, int ttFd );
+extern Tt_status InitializeToolTalkProcid( int *ttFd, Widget topLevel, Boolean sendStarted );
+extern void FinalizeToolTalkSession();
+/* From Trash.c */
+void CloseTrash(Widget w, XtPointer client_data, XtPointer call_data) ;
+
+
 
 /* When openDir resource is set to NEW
    File Manager will use this prefix to find for a different icon
@@ -955,7 +975,7 @@ XtActionsRec actionTable[] = {
 
 extern XtInputId ProcessToolTalkInputId;
 
-#ifdef __osf__
+#if defined(__osf__) || defined(__OpenBSD__)
 extern void sigchld_handler(int);
 #endif /* __osf__ */
 
@@ -978,7 +998,6 @@ main(
    XtInputMask pending;
    Boolean eventDebugging;
    int offset;
-   KeySym keysym;
    int displayHeight;
    int displayWidth;
    Arg args[10];
@@ -1000,7 +1019,7 @@ main(
    Tt_pattern requests2Handle;
    Tt_message msg;
    Tt_status status;
-#ifdef __osf__
+#if defined(__osf__) || defined(__OpenBSD__)
    struct sigaction sa, osa;
 #endif /* __osf__ */
    int session_flag = 0;
@@ -1012,7 +1031,7 @@ main(
    (void) signal (SIGINT, (void (*)())Stop);
 
    /* We don't want any zombie children, do we? */
-#ifdef __osf__
+#if defined(__osf__) || defined(__OpenBSD__)
     sa.sa_handler = sigchld_handler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags   =  0;
@@ -1626,7 +1645,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
    mod_attr_dialog = _DtInstallDialog (modAttrClass, True, True);
    help_dialog = _DtInstallDialog (helpClass, False, False);
 
-   if(special_view == True && special_restricted != NULL);
+   if(special_view == True && special_restricted != NULL) {
       if(strncmp(special_restricted, "~", 1) == 0)
       {
          char *ptr, *ptr1;
@@ -1637,6 +1656,7 @@ _DtPerfChkpntMsgSend("Begin XtInitialize");
          if(ptr1[0] == '\0')
             *ptr = '\0';
       }
+   }
 
    /* Setup the settings file if any to setup */
    RestoreSettingsFile();
@@ -2988,7 +3008,7 @@ RestoreSession(
       status = DtSessionRestorePath(toplevel, &full_path, path);
 
       if (!status)
-         return;
+         return(-1);
 
       if (stat(full_path, &stat_buf) != 0)
       {
@@ -4393,7 +4413,7 @@ ViewDirectoryProc(
             XtFree(errTitle);
             XtFree(errMsg);
             XtFree(dmsg);
-            return;
+            return NULL;
          }
       }
    }
@@ -5124,7 +5144,7 @@ CleanUp (
    XRectangle textExtent;
    Position x, y;
 
-   if ((int) client_data == FM_POPUP)
+   if ((int)(XtArgVal) client_data == FM_POPUP)
      mbar = XtParent(w);
    else
      mbar = XmGetPostedFromWidget(XtParent(w));
@@ -6272,7 +6292,7 @@ FinalizeToolTalkSession();
 exit (1);
 }
 
-#ifdef __osf__
+#if defined(__osf__) || defined(__OpenBSD__)
 extern void
 sigchld_handler(int signo)      /* Do not use the arg signo at the moment */
 {

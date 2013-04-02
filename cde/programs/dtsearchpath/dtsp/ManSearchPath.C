@@ -88,6 +88,22 @@ void ManSearchPath::MakePath
     }
 }
 
+#if defined(__FreeBSD__)
+/*****************************************************************
+ *  useSystemPath()
+ *
+ *         Check whether to leave MANPATH unmodified (or unset)
+ *
+ */
+int ManSearchPath::useSystemPath()
+{
+     if (user->OS()->getEnvironmentVariable("MANPATH").isNull()) {
+       return 1;
+     } else {
+       return 0;
+     }
+}
+#endif
 
 /*****************************************************************
  *  ExportPath()
@@ -97,9 +113,11 @@ void ManSearchPath::MakePath
  *****************************************************************/
 void ManSearchPath::ExportPath()
 {
-    CString env(GetEnvVar());
-    user->OS()->shell()->putToEnv(env,
+    if (!useSystemPath()) {
+      CString env(GetEnvVar());
+      user->OS()->shell()->putToEnv(env,
 		       final_search_path.data());
+    }
 }
 
 
@@ -107,7 +125,7 @@ void ManSearchPath::Print()
 {
     printf("%s:\n", GetEnvVar());
     CString sp(GetSearchPath());
-    if (!sp.isNull()) {
+    if (!useSystemPath() && !sp.isNull()) {
 	CTokenizedString path (sp,Separator().data());
 	CString subpath = path.next();
 	while (!subpath.isNull()) {

@@ -390,7 +390,7 @@ static const FrmtPrivateInfo DefPrivInfo =
 	(char) False,		/* char		 top_block;	*/
 	(char) False,		/* char		 dup_flag;	*/
 	0,			/* int		 sdl_type;	*/
-	NULL,			/* void		*match_info;	*/
+	0,			/* void		*match_info;	*/
 	NULL,			/* void		*id_info;	*/
 	NULL,			/* void		*tmp_info;	*/
   };
@@ -4072,7 +4072,6 @@ Format(
     char		*id_string,
     _DtCvTopicPtr	*ret_topic )
 {
-    int			 cnt;
     int			 result  = 0;
     int			 done    = 0;
     char		*charSet = NULL;

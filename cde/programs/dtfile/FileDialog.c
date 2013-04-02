@@ -92,6 +92,9 @@
 #include <Dt/Connect.h>
 #include <Dt/DtNlUtils.h>
 #include <Dt/FileM.h>
+#include <Dt/HourGlass.h>
+#include <Dt/Dts.h>
+#include <Dt/SharedProcs.h>
 
 #include <Tt/tttk.h>
 
@@ -189,7 +192,7 @@ ShowRenameFileDialog(
 
   XmUpdateDisplay (w);
 
-  if((int)client_data != 0)
+  if(client_data != 0)
   {
     file_view_data = (FileViewData *)client_data;
     mbar = XtParent(w);
@@ -221,7 +224,7 @@ ShowRenameFileDialog(
   XtSetArg (args[n], XmNallowShellResize, True);  n++;
 
   /* Ignore accelerators when we're insensitive */
-  if((int)client_data == 0)
+  if(client_data == 0)
   {
     if ((file_mgr_rec->menuStates & RENAME) == 0)
       return;
@@ -267,6 +270,7 @@ ShowCopyFileDialog(
    char * directory_name;
    char * tmpStr, *tempStr;
 
+   XtArgVal width;
    Dimension f_width, d_width;
 
    Widget shell;
@@ -298,7 +302,7 @@ ShowCopyFileDialog(
 
    XmUpdateDisplay (w);
 
-   if((int)client_data != 0)
+   if(client_data != 0)
    {
       file_view_data = (FileViewData *)client_data;
       mbar = XtParent(w);
@@ -539,16 +543,20 @@ ShowCopyFileDialog(
    /*  Make the two labels the same length - maximum.  */
    /* ------------------------------------------------ */
 
-   XtVaGetValues(dir_label, XmNwidth, &d_width, NULL);
-   XtVaGetValues(file_label, XmNwidth, &f_width, NULL);
+   XtVaGetValues(dir_label, XmNwidth, &width, NULL);
+   d_width = (Dimension)width;
+   XtVaGetValues(file_label, XmNwidth, &width, NULL);
+   f_width = (Dimension)width;
 
    if (d_width > f_width)
        XtVaSetValues(file_label, XmNwidth, d_width, NULL);
    else
        XtVaSetValues(dir_label, XmNwidth, f_width, NULL);
 
-   XtVaGetValues(dir_text, XmNwidth, &d_width, NULL);
-   XtVaGetValues(file_text, XmNwidth, &f_width, NULL);
+   XtVaGetValues(dir_text, XmNwidth, &width, NULL);
+   d_width = (Dimension)width;
+   XtVaGetValues(file_text, XmNwidth, &width, NULL);
+   f_width = (Dimension)width;
 
    if (d_width > f_width)
        XtVaSetValues(file_text, XmNwidth, d_width, NULL);
@@ -769,7 +777,7 @@ ShowMoveFileDialog(
 
    XmUpdateDisplay (w);
 
-   if((int)client_data != 0)
+   if(client_data != 0)
    {
       file_view_data = (FileViewData *)client_data;
       mbar = XtParent(w);
@@ -1094,7 +1102,7 @@ ShowLinkFileDialog(
 
    XmUpdateDisplay (w);
 
-   if((int)client_data != 0)
+   if(client_data != 0)
    {
       file_view_data = (FileViewData *)client_data;
       mbar = XtParent(w);
@@ -1742,7 +1750,7 @@ FileTypePreview(
    char * new_link_path;
    PixmapData *pixmapData;
    Tt_status tt_status;
-   Boolean Flag =  ((Boolean)call_data == True)?True:False;
+   Boolean Flag =  ((Boolean)(XtArgVal)call_data == True)?True:False;
 
    call_struct = (DialogCallbackStruct *) client_data;
    new_name = (char *) _DtStripSpaces (new_name);
@@ -2848,7 +2856,7 @@ RecheckFlag(
   Widget w)
 {
    Arg args[2];
-   int flag;
+   XtArgVal flag;
 
    XtSetArg (args[0], XmNuserData, &flag);
    XtGetValues(w,args,1);
@@ -2870,9 +2878,11 @@ ResetFlag(
    Widget w)
 {
    Arg args[2];
+   XtArgVal flag0;
    int flag;
-   XtSetArg (args[0], XmNuserData, &flag);
+   XtSetArg (args[0], XmNuserData, &flag0);
    XtGetValues(w,args,1);
+   flag = (int)flag0;
    if(flag != FLAG_SET)
       return;
    flag = FLAG_RESET;

@@ -153,8 +153,6 @@ char           *OEF_readme = NULL;
 
 /*------------ OTHER GLOBALS -----------*/
 SAVEUSR         saveusr = { 0 };
-static DtSrHitword
-		next_hitwords [DtSrMAX_STEMCOUNT];
 
 
 /****************************************/
@@ -258,7 +256,7 @@ int	oe_unblob (LLIST *bloblist)
     if (usrblk.debug & USRDBG_RETRVL)
 	fprintf (aa_stderr, PROGNAME "256 "
 	    "oe_unblob: actual decompressed length = %ld.\n",
-	    targ - (UCHAR *) usrblk.cleartext);
+	    (long) (targ - (UCHAR *) usrblk.cleartext));
     return OE_OK;
 }  /* oe_unblob() */
 
@@ -475,16 +473,11 @@ char	*retncode_str (int num)
 /************************************************/
 void            Opera_Engine (void)
 {
-    int		i, len, ws_flag;
+    int		i;
     char	sprintbuf [1024];
-    char	*ptr, *ptr2;
     LLIST	*bloblist;
-    LLIST	*llp;
-    FILE	*stream;
     DBLK	*db;
-    PARG	parg;
     DB_ADDR	dba;
-    static int	first_idletime_call = TRUE;
     static time_t
 		start_time = 0L;
 
@@ -816,7 +809,7 @@ NO_TEXT:
 		fprintf (aa_stderr, PROGNAME "1089 RECKEY2DBA: "
 		    "retncode=%d, reckey='%s' ->\tdba=%ld:%ld\n",
 		    usrblk.retncode, usrblk.query,
-		    (usrblk.dba) >> 24, (usrblk.dba) & 0xffffff);
+		     (long) ((usrblk.dba) >> 24), (long) ((usrblk.dba) & 0xffffff));
 	    break;
 
 	case OE_DELETE_RECID:

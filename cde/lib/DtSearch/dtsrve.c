@@ -133,8 +133,6 @@ static LLIST   *append_blob (LLIST ** bloblink,
                     struct or_blobrec * blobrec)
 {
     LLIST          *new;
-    int             i;
-    char           *to;
 
     new = austext_malloc (sizeof (struct or_blobrec) + sizeof (LLIST) + 4,
 	PROGNAME "36", NULL);
@@ -272,10 +270,10 @@ int             ve_initialize (void)
 	    fprintf (aa_stderr,
 		"\tvers='%s' reccount=%ld maxdba=%ld fzkeysz=%d\n"
 		"\tdbflags=x%lx maxwordsz=%d hufid=%ld abstrsz=%d\n",
-		db->dbrec.or_version, db->dbrec.or_reccount,
-		db->dbrec.or_maxdba, db->dbrec.or_fzkeysz,
-		db->dbrec.or_dbflags, db->dbrec.or_maxwordsz,
-		db->dbrec.or_hufid, db->dbrec.or_abstrsz);
+		db->dbrec.or_version, (long) db->dbrec.or_reccount,
+		(long) db->dbrec.or_maxdba, db->dbrec.or_fzkeysz,
+		(unsigned long) db->dbrec.or_dbflags, db->dbrec.or_maxwordsz,
+		(long) db->dbrec.or_hufid, db->dbrec.or_abstrsz);
 	}
 
 	/*-------------- OPEN D97 and D98 FILES ----------------
@@ -418,7 +416,6 @@ int             ve_append_notes (void)
     static char	formfeed_line[] = "\f\n";
     struct or_miscrec
 		miscrec;
-    _Xltimeparams localtime_buf;
     struct tm	*time_ptr;
 
     /* Test if function is disabled */
@@ -600,7 +597,6 @@ static void     store_next_misc (
 			store_state =	STORE_DONE;
     static char		*targ =		NULL;
     static int		targlen =	0;
-    static int		fzkeysz =	0;
     static int		abstrsz =	0;
     int			i;
 
@@ -703,9 +699,7 @@ int             ve_getrec_dba (LLIST ** bloblist)
 		myblobuf;
     struct or_miscrec
 		mymiscrec;
-    int		i;
     int		debugging = (usrblk.debug & USRDBG_RETRVL);
-    char	*src, *targ;
     LLIST	*new, *lastnode, **lastlink;
     int		vistano = usrblk.dblk->vistano;
     int		is_first_misc = TRUE;
@@ -888,8 +882,8 @@ LLIST          *ve_getblobs (DtSrINT32 dba, int vistano)
 	fprintf (aa_stderr, PROGNAME "792 ve_getblobs: "
 	    "db='%s'[v#%d] dba=%ld:%ld v#=%d sz=%ld: '%s'\n",
 	    usrblk.dblk->name, usrblk.dblk->vistano,
-	    dba >> 24, dba % 0xffffff, vistano,
-	    myobjbuf.or_objsize, myobjbuf.or_objkey);
+	    (long) (dba >> 24), (long) (dba % 0xffffff), vistano,
+	    (long) myobjbuf.or_objsize, myobjbuf.or_objkey);
     }
 
     /* Retrieve blobs and append to end of growing list.

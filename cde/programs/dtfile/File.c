@@ -149,6 +149,7 @@
 #include <string.h>
 #include <locale.h>
 #include <ctype.h>
+#include <fnmatch.h>
 
 #include <Xm/XmP.h>
 #include <Xm/Xm.h>
@@ -158,6 +159,9 @@
 #include <X11/Shell.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#ifndef XK_MISCELLANY
+#define XK_MISCELLANY
+#endif
 #include <X11/keysymdef.h>
 
 #ifdef SHAPE
@@ -169,8 +173,10 @@
 #include <Xm/RowColumn.h>
 #include <Xm/LabelG.h>
 #include <Xm/PushBG.h>
+#include <Xm/ToggleBG.h>
 #include <Xm/SeparatoG.h>
 #include <Xm/ScrollBar.h>
+#include <Xm/ScrolledW.h>
 #include <Xm/TextF.h>
 #include <Xm/Frame.h>
 #include <Xm/Screen.h>
@@ -194,8 +200,11 @@
 #include <Dt/HourGlass.h>
 #include <Dt/Dts.h>
 #include <Dt/UserMsg.h>
+#include <Dt/SharedProcs.h>
 
 #include <Tt/tttk.h>
+
+#include <Xm/XmPrivate.h> /* _XmIsEventUnique _XmSetInDragMode _XmRecordEvent */
 
 #include "Encaps.h"
 #include "SharedProcs.h"
@@ -414,6 +423,12 @@ static int dragIconPixmapOffsetY;
 
 FileMgrPopup fileMgrPopup = {NULL};
 
+
+/* Obsolete Motif highlighting and unhighlighting routines */
+extern void _XmHighlightBorder(Widget w);
+extern void _XmUnhighlightBorder(Widget w);
+
+extern void SelectDTFile (DesktopRec *desktopWindow);
 
 /************************************************************************
  ************************************************************************
@@ -7181,7 +7196,7 @@ CommitWorkProcUpdates(
    /* If not managed yet, manage the file window again */
    if (!XtIsManaged((Widget)file_window))
    {
-     int incr;
+     XtArgVal incr;
      Arg args[2];
 
      XtManageChild ((Widget)file_window);
@@ -7246,7 +7261,7 @@ DisplayWorkProc(
 
    dialog_data = _DtGetInstanceData ((XtPointer)file_mgr_rec);
    if (dialog_data == NULL)
-      return;
+      return False;
 
    file_mgr_data = (FileMgrData *) dialog_data->data;
    file_window = (XmManagerWidget) file_mgr_rec->file_window;

@@ -56,9 +56,12 @@ double mods[] = { 1.0, 1.0e-1, 1.0e-2, 1.0e-3, 1.0e-4,
                   1.0e-10, 1.0e-11, 1.0e-12, 1.0e-13, 1.0e-14,
                   1.0e-15, 1.0e-16, 1.0e-17, 1.0e-18, 1.0e-19 };
 
+static void compute_i(double *target);
+static int count_sign_changes(double *cf, int count);
+
 
 void
-do_accuracy()     /* Set display accuracy. */
+do_accuracy(void)     /* Set display accuracy. */
 {
   int i ;
 
@@ -74,16 +77,14 @@ do_accuracy()     /* Set display accuracy. */
 
 
 void
-do_ascii()        /* Convert ASCII value. */
+do_ascii(void)        /* Convert ASCII value. */
 {
-  int val ;
-
   show_ascii_frame() ;
 }
 
 
 void
-do_base()    /* Change the current base setting. */
+do_base(void)    /* Change the current base setting. */
 {
        if (v->current == BASE_BIN) v->base = BIN ;
   else if (v->current == BASE_OCT) v->base = OCT ;
@@ -95,8 +96,7 @@ do_base()    /* Change the current base setting. */
 }
 
 void
-set_base(base)
-enum base_type base ;
+set_base(enum base_type base)
 {
   grey_buttons(v->base) ;
   show_display(v->MPdisp_val) ;
@@ -107,13 +107,12 @@ enum base_type base ;
 }
 
 void
-do_business()     /* Perform special business mode calculations. */
+do_business(void)     /* Perform special business mode calculations. */
 {
   Boolean need_show = TRUE;
   char *display_number = NULL;
   int MPbv[MP_SIZE], MP1[MP_SIZE], MP2[MP_SIZE], MP3[MP_SIZE], MP4[MP_SIZE] ;
-  int MP5[MP_SIZE];
-  int i, len, val, val2, accSav ;
+  int i, len, val, accSav ;
   double result, w;
 
   if (IS_KEY(v->current, KEY_CTRM))
@@ -466,7 +465,7 @@ do_business()     /* Perform special business mode calculations. */
 
 
 void
-do_calc()      /* Perform arithmetic calculation and display result. */
+do_calc(void)      /* Perform arithmetic calculation and display result. */
 {
   double dval, dres ;
   int MP1[MP_SIZE] ;
@@ -474,12 +473,15 @@ do_calc()      /* Perform arithmetic calculation and display result. */
   /* the financial state is false - last key was not a fin. key */
   v->funstate = 0;
 
-  if (!(v->opsptr && !v->show_paren))   /* Don't do if processing parens. */
-    if (IS_KEY(v->current, KEY_EQ) && IS_KEY(v->old_cal_value, KEY_EQ))
-      if (v->new_input)
+  if (!(v->opsptr && !v->show_paren)) {  /* Don't do if processing parens. */
+    if (IS_KEY(v->current, KEY_EQ) && IS_KEY(v->old_cal_value, KEY_EQ)) {
+      if (v->new_input) {
          mpstr(v->MPdisp_val, v->MPresult) ;
-      else
+      } else {
          mpstr(v->MPlast_input, v->MPdisp_val) ;
+      }
+    }
+  }
 
   if (!IS_KEY(v->current, KEY_EQ) && IS_KEY(v->old_cal_value, KEY_EQ))
     v->cur_op = '?' ;
@@ -562,7 +564,7 @@ do_calc()      /* Perform arithmetic calculation and display result. */
 
 
 void
-do_clear()       /* Clear the calculator display and re-initialise. */
+do_clear(void)       /* Clear the calculator display and re-initialise. */
 {
   clear_display() ;
   if (v->error) set_item(DISPLAYITEM, "") ;
@@ -571,7 +573,7 @@ do_clear()       /* Clear the calculator display and re-initialise. */
 
 
 void
-do_constant()
+do_constant(void)
 {
   if (v->current >= '0' && v->current <= '9')
     {
@@ -582,7 +584,7 @@ do_constant()
 
 
 void
-do_delete()     /* Remove the last numeric character typed. */
+do_delete(void)     /* Remove the last numeric character typed. */
 {
   if (strlen(v->display))
     v->display[strlen(v->display)-1] = '\0' ;
@@ -611,7 +613,7 @@ do_delete()     /* Remove the last numeric character typed. */
 
 
 void
-do_exchange()         /* Exchange display with memory register. */
+do_exchange(void)         /* Exchange display with memory register. */
 {
   int i, MPtemp[MP_SIZE] ;
 
@@ -628,7 +630,7 @@ do_exchange()         /* Exchange display with memory register. */
 
 
 void
-do_expno()           /* Get exponential number. */
+do_expno(void)           /* Get exponential number. */
 {
   /* the financial state is false - last key was not a fin. key */
   v->funstate = 0;
@@ -654,8 +656,7 @@ do_expno()           /* Get exponential number. */
 
 
 void
-do_factorial(MPval, MPres)             /* Calculate the factorial of MPval. */
-int *MPval, *MPres ;
+do_factorial(int *MPval, int *MPres)     /* Calculate the factorial of MPval. */
 {
   double val ;
   int i, MPa[MP_SIZE], MP1[MP_SIZE], MP2[MP_SIZE] ;
@@ -699,13 +700,13 @@ int *MPval, *MPres ;
 
 
 void
-do_frame()    /* Exit dtcalc. */
+do_frame(void)    /* Exit dtcalc. */
 {
   exit(0) ;
 }
 
 void
-do_function()      /* Perform a user defined function. */
+do_function(void)      /* Perform a user defined function. */
 {
   enum fcp_type scurwin ;
   int fno, scolumn, srow ;
@@ -727,7 +728,7 @@ do_function()      /* Perform a user defined function. */
 
 
 void
-do_immed()
+do_immed(void)
 {
   double dval, dval2 ;
   int i, MP1[MP_SIZE], MP2[MP_SIZE] ;
@@ -857,14 +858,14 @@ do_immed()
 
 
 void
-do_keys()      /* Display/undisplay the dtcalc key values. */
+do_keys(void)      /* Display/undisplay the dtcalc key values. */
 {
   v->tstate = !v->tstate ;
   redraw_buttons() ;
 }
 
 void
-do_mode()                  /* Set special calculator mode. */
+do_mode(void)                  /* Set special calculator mode. */
 {
        if (v->current == MODE_FIN) v->modetype = FINANCIAL ;
   else if (v->current == MODE_LOG) v->modetype = LOGICAL ;
@@ -876,13 +877,13 @@ do_mode()                  /* Set special calculator mode. */
 
 
 void
-do_none()       /* Null routine for empty buttons. */
+do_none(void)       /* Null routine for empty buttons. */
 {
 }
 
 
 void
-do_number()
+do_number(void)
 {
   char nextchar ;
   int len, n ;
@@ -927,7 +928,7 @@ do_number()
 
 
 void
-do_numtype()    /* Set number type (engineering, fixed or scientific). */
+do_numtype(void)    /* Set number type (engineering, fixed or scientific). */
 {
        if (v->current == DISP_ENG) v->dtype = ENG ;
   else if (v->current == DISP_FIX) v->dtype = FIX ;
@@ -937,8 +938,8 @@ do_numtype()    /* Set number type (engineering, fixed or scientific). */
   set_numtype(v->dtype);
 }
 
-set_numtype( dtype )
-enum num_type dtype ;
+void
+set_numtype(enum num_type dtype)
 {
   v->pending = 0 ;
   show_display(v->MPdisp_val) ;
@@ -948,7 +949,7 @@ enum num_type dtype ;
 }
 
 void
-do_paren()
+do_paren(void)
 {
   char *ptr ;
   double tmpdb;
@@ -1045,7 +1046,7 @@ do_paren()
 }
 
 void
-do_pending()
+do_pending(void)
 {
 
   /* the financial state is false - last key was not a fin. key */
@@ -1114,7 +1115,7 @@ do_pending()
 
 
 void
-do_point()                   /* Handle numeric point. */
+do_point(void)                   /* Handle numeric point. */
 {
   /* the financial state is false - last key was not a fin. key */
   v->funstate = 0;
@@ -1137,7 +1138,7 @@ do_point()                   /* Handle numeric point. */
 
 
 void
-do_portion()
+do_portion(void)
 {
   int MP1[MP_SIZE] ;
 
@@ -1164,9 +1165,9 @@ do_portion()
 
 
 void
-do_shift()     /* Perform bitwise shift on display value. */
+do_shift(void)     /* Perform bitwise shift on display value. */
 {
-  int i, MPtemp[MP_SIZE], shift ;
+  int MPtemp[MP_SIZE], shift ;
   BOOLEAN temp ;
   double dval ;
 
@@ -1192,7 +1193,7 @@ do_shift()     /* Perform bitwise shift on display value. */
 
 
 void
-do_sto_rcl()     /* Save/restore value to/from memory register. */
+do_sto_rcl(void)     /* Save/restore value to/from memory register. */
 {
   int i, MPn[MP_SIZE], n ;
 
@@ -1243,7 +1244,7 @@ do_sto_rcl()     /* Save/restore value to/from memory register. */
 
 
 void
-do_trig()         /* Perform all trigonometric functions. */
+do_trig(void)         /* Perform all trigonometric functions. */
 {
   int i, MPtemp[MP_SIZE], MP1[MP_SIZE], MP2[MP_SIZE] ;
   double cval ;
@@ -1352,7 +1353,7 @@ do_trig()         /* Perform all trigonometric functions. */
 
 
 void
-do_trigtype()          /* Change the current trigonometric type. */
+do_trigtype(void)          /* Change the current trigonometric type. */
 {
        if (v->current == TRIG_DEG) v->ttype = DEG ;
   else if (v->current == TRIG_GRA) v->ttype = GRAD ;
@@ -1372,8 +1373,7 @@ do_trigtype()          /* Change the current trigonometric type. */
 
 
 BOOLEAN
-ibool(x)
-double x ;
+ibool(double x)
 {
   BOOLEAN p ;
 
@@ -1389,8 +1389,7 @@ double x ;
 }
 
 BOOLEAN
-ibool2(x)
-double x ;
+ibool2(double x)
 {
   BOOLEAN p ;
 
@@ -1428,8 +1427,7 @@ double x ;
  */
 
 void
-mpacos(MPx, MPretval)
-int *MPx, *MPretval ;
+mpacos(int *MPx, int *MPretval)
 {
   int MP0[MP_SIZE],  MP1[MP_SIZE],  MP2[MP_SIZE] ;
   int MPn1[MP_SIZE], MPpi[MP_SIZE], MPy[MP_SIZE], val ;
@@ -1475,8 +1473,7 @@ int *MPx, *MPretval ;
  */
 
 void
-mpacosh(MPx, MPretval)
-int *MPx, *MPretval ;
+mpacosh(int *MPx, int *MPretval)
 {
   int MP1[MP_SIZE], val ;
 
@@ -1506,8 +1503,7 @@ int *MPx, *MPretval ;
  */
 
 void
-mpasinh(MPx, MPretval)
-int *MPx, *MPretval ;
+mpasinh(int *MPx, int *MPretval)
 {
   int MP1[MP_SIZE], val ;
 
@@ -1528,8 +1524,7 @@ int *MPx, *MPretval ;
  */
 
 void
-mpatanh(MPx, MPretval)
-int *MPx, *MPretval ;
+mpatanh(int *MPx, int *MPretval)
 {
   int MP0[MP_SIZE], MP1[MP_SIZE], MP2[MP_SIZE] ;
   int MP3[MP_SIZE], MPn1[MP_SIZE], val ;
@@ -1564,8 +1559,7 @@ int *MPx, *MPretval ;
  */
 
 void
-mplog10(MPx, MPretval)
-int *MPx, *MPretval ;
+mplog10(int *MPx, int *MPretval)
 {
   int MP1[MP_SIZE], MP2[MP_SIZE], n ;
 
@@ -1578,8 +1572,7 @@ int *MPx, *MPretval ;
 
 
 void
-process_parens(current)
-char current ;
+process_parens(char current)
 {
   int i ;
   int last_lpar ;     /* Position in stack of last left paren. */
@@ -1663,8 +1656,7 @@ char current ;
 
 
 void
-push_num(MPval)            /* Try to push value onto the numeric stack. */
-int *MPval ;
+push_num(int *MPval)            /* Try to push value onto the numeric stack. */
 {
   if (v->numsptr < 0) return ;
   if (v->numsptr >= MAXSTACK)
@@ -1686,8 +1678,7 @@ int *MPval ;
 
 
 void
-push_op(val)     /* Try to push value onto the operand stack. */
-int val ;
+push_op(int val)     /* Try to push value onto the operand stack. */
 {
   if (v->opsptr < 0) return ;
   if (v->opsptr >= MAXSTACK)
@@ -1702,8 +1693,7 @@ int val ;
 
 
 void
-save_pending_values(val)
-int val ;
+save_pending_values(int val)
 {
   int n ;
 
@@ -1720,8 +1710,7 @@ int val ;
 
 
 double
-setbool(p)
-BOOLEAN p ;
+setbool(BOOLEAN p)
 {
   BOOLEAN q ;
   double val ;
@@ -1734,9 +1723,7 @@ BOOLEAN p ;
 }
 
 double
-do_round(result, ndigits)
-double result;
-int ndigits;
+do_round(double result, int ndigits)
 {
     char buf2[40], buffer[100];
     int temp;
@@ -1752,7 +1739,7 @@ int ndigits;
     if (!temp)
        return (temp > 0) ? HUGE : -HUGE;
 #else
-    if (temp = isinf(result)) return (temp > 0) ? HUGE : -HUGE;
+    if ((temp = isinf(result))) return (temp > 0) ? HUGE : -HUGE;
 #endif /* USL or __uxp__ */
 #endif /* _AIX or __osf__ */
 
@@ -1768,10 +1755,7 @@ int ndigits;
 }
 
 BOOLEAN
-try_compute_i(guess, result, method)
-double guess;
-double *result;
-int method;
+try_compute_i(double guess, double *result, int method)
 {
     double sum_pos, sum_pos_prime, sum_neg, sum_neg_prime, w = guess;
     double new_w;
@@ -1850,6 +1834,7 @@ int method;
 
 	switch (method)
 	{
+            default:
 	    case 1:
 		f = lsp - lsn;
 		f_prime = sum_pos_prime / sum_pos - sum_neg_prime / sum_neg;
@@ -1877,7 +1862,7 @@ int method;
 #endif
 #endif /* _AIX or __osf__ */
 
-	if (new_w == w || w != 0.0 && fabs((new_w - w) / w) < FIN_EPSILON)
+	if (new_w == w || (w != 0.0 && fabs((new_w - w) / w) < FIN_EPSILON))
            break;
 
 	w = new_w;
@@ -1890,8 +1875,8 @@ int method;
     return TRUE;
 }
 
-compute_i(target)
-double *target;
+static void
+compute_i(double *target)
 {
     double p[3];
     double first_period, last_period;
@@ -1954,10 +1939,8 @@ double *target;
         doerr(GETMESSAGE(5, 1, "ERROR: Computation Failed"));
 }
 
-int
-count_sign_changes(cf, count)
-double *cf;
-int count;
+static int
+count_sign_changes(double *cf, int count)
 {
     int i, curr_sign = 0, result = 0;
 

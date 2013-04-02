@@ -88,7 +88,7 @@ writeToFileDesc(const char * buf, int len, va_list args)
 {
     int * fds = va_arg(args, int *);
     int cnt = va_arg(args, int);
-    DtMailBoolean strip = va_arg(args, DtMailBoolean);
+    DtMailBoolean strip = (DtMailBoolean)va_arg(args, int);
 
     unsigned long saveErrno = 0;	// Initially no error recorded
 
@@ -740,6 +740,8 @@ RFCTransport::launchSendmail(DtMailEnv & error,
     if (error.isSet()) {
 #if defined(USL) || defined(__uxp__)
         mailer = "/usr/ucblib/sendmail";
+#elif defined(__OpenBSD__)
+	mailer = "/usr/sbin/sendmail";
 #else
         mailer = "/usr/lib/sendmail";
 #endif
