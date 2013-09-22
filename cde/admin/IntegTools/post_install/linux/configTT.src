@@ -20,13 +20,22 @@ FixInetdDotConf()
 {
 FILE=/etc/inetd.conf
 TMPFILE=/tmp/inetd.conf
-TTDBSERVERD=CDE_INSTALLATION_TOP/bin/rpc.ttdbserverd
+TTDBSERVERD=CDE_INSTALLATION_TOP/bin/rpc.ttdbserver
+
+XCOMM
+XCOMM check for existence of /etc/inetd.conf
+XCOMM
+
+    if [ ! -f $FILE ]	# highly unlikely
+    then
+	echo "" >$FILE
+    fi
 
 XCOMM
 XCOMM see if it already exists
 XCOMM
 
-    nawk -v ttdb=$TTDBSERVERD \
+    awk -v ttdb=$TTDBSERVERD \
 	'{if ($1 == "100083/1" && $6 != ttdb)
 		print "#cde " $0;
 	  else
@@ -53,9 +62,9 @@ UnfixInetdDotConf()
 {
 FILE=/etc/inetd.conf
 TMPFILE=/tmp/inetd.conf
-TTDBSERVERD=CDE_INSTALLATION_TOP/bin/rpc.ttdbserverd
+TTDBSERVERD=CDE_INSTALLATION_TOP/bin/rpc.ttdbserver
 
-    nawk -v ttdb=$TTDBSERVERD \
+    awk -v ttdb=$TTDBSERVERD \
 	'{if ($1 == "100083/1" && $6 == ttdb)
 		;
 	  else
@@ -155,9 +164,9 @@ XCOMM ######################################################################
     ps -ef | grep inetd | grep -v grep >/tmp/tmppsout
     if [ -s /tmp/tmppsout ]
     then
-	awk '{print "kill -1 " $2}' /tmp/tmppsout | /bin/csh
+	awk '{print "kill -1 " $2}' /tmp/tmppsout | /bin/sh
     else
-	/usr/sbin/inetd -s
+	[ -x /usr/sbin/inetd ] && /usr/sbin/inetd
     fi
 
     rm /tmp/tmppsout

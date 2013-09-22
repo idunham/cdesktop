@@ -227,7 +227,7 @@ XCOMM ###############################################################
 
     FixEtcInetdDotConf
 
-    FixEtcPamDotConf
+    HASH FixEtcPamDotConf
 
     HASH
     HASH  create the /var/dt/tmp directory for the dtspcd
@@ -266,9 +266,9 @@ XCOMM ###############################################################
     ps -ef | grep inetd | grep -v grep >/tmp/tmppsout
     if [ -s /tmp/tmppsout ]
     then
-	awk '{print "kill -1 " $2}' /tmp/tmppsout | /bin/csh
+	awk '{print "kill -1 " $2}' /tmp/tmppsout | /bin/sh
     else
-	/usr/sbin/inetd -s
+	[ -x /usr/sbin/inetd ] && /usr/sbin/inetd
     fi
   fi
 

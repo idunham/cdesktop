@@ -322,9 +322,6 @@ DEFAULT_PRINTER="DtPrint"
     /etc/rc.d/inetd onereload
   fi
 
-   HASH dtmail requires setgid
-   chmod 2555 $DT_TOP/bin/dtmail
-
   HASH dtmail requires setgid
   chmod 2555 $DT_TOP/bin/dtmail
 

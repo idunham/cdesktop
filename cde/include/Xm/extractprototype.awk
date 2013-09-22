@@ -61,4 +61,14 @@ function proto() {
 /_XmShellIsExclusive/ { proto(); }
 /_XmTextFieldSetDestination/ { proto(); }
 /_XmGetActiveTopLevelMenu/ { proto(); }
+/_XmGetFocusPolicy/ { proto(); }
+/_XmPrimitiveEnter/ { proto(); }
+/_XmPrimitiveLeave/ { proto(); }
+/_XmPrimitiveFocusOut/ { proto(); }
+/_XmPrimitiveFocusIn\(/ { proto(); }
+/_XmBulletinBoardSetDynDefaultButton/ { proto(); }
+/_XmBulletinBoardSizeUpdate/ { proto(); }
+/_XmManagerHelp/ { proto(); }
+/_XmPutScaledImage/ { proto(); }
+/_XmGeoSetupKid/ { proto(); }
 /XmeFlushIconFileCache/ { proto(); }
