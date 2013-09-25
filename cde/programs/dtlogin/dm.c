@@ -1494,6 +1494,10 @@ SetTitle( char *name, char *ptr )
 
 #if defined (_AIX) && defined (_POWER) || defined (__osf__)
 #define GETTYPATH "/usr/sbin/getty"
+#elif defined(__OpenBSD__)
+#define GETTYPATH "/usr/libexec/getty"
+#elif defined(__linux)
+#define GETTYPATH "/sbin/getty"
 #elif !defined (__apollo)
 #define GETTYPATH "/etc/getty"
 #endif
@@ -1612,6 +1616,8 @@ GettyMessage( struct display *d, int msgnum )
 {
     FILE *tf;
     char buf[128];
+
+    if (quiet) return;
 
     strcpy(buf,"/dev/");
     strcat(buf,d->gettyLine);
