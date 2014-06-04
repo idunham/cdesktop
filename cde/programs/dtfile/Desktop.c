@@ -64,6 +64,7 @@
  *		PutOnDTCB
  *		RegisterIconDropsDT
  *		RegisterInGrid
+ *		RegisterPanelInGrid
  *		RemoveDT
  *		RemoveMovedObjectFromDT
  *		RunDTCommand
@@ -148,7 +149,7 @@ static char DESKTOP_SAVE_NAME[] =  ".!dtdesktop";
 DesktopData *desktop_data;
 Widget widget_dragged;
 DesktopRec *sacredDesktop;
-Boolean *desktop_grid;
+unsigned char *desktop_grid;
 unsigned short int desktop_grid_size;
 
 
@@ -2453,25 +2454,48 @@ DTFileIsSelected (
 
 /***********************************************************************
  *
+ *  RegisterPanelInGrid - Registers the Dtwm planel in grid
+ *
+ *  Arguments: workspace - workspace number
+ *             displayWidth - width of worspace screen
+ *             displayHaight - height of workspace screen
+ *
+ ************************************************************************/
+
+void RegisterPanelInGrid(int workspace,  int displayWidth, int displayHeight )
+{
+   /* want to take out space where the FP lays ... Note this only for the
+      default size of the FP.  Right now there is no dynamic way of registering
+      the FP no matter what size it is */
+#define EXPECTED_PANEL_WIDTH 1105
+#define EXPECTED_PANEL_HEIGHT 83
+   RegisterInGrid(EXPECTED_PANEL_WIDTH, EXPECTED_PANEL_HEIGHT,
+                 /* the panel is expected to be horizontally centered */
+                 (displayWidth > EXPECTED_PANEL_WIDTH) ?
+                  (displayWidth - EXPECTED_PANEL_WIDTH) / 2 : 0,
+                 /* the panel is expected to be at the bottom of the screen */
+                 (displayHeight > EXPECTED_PANEL_HEIGHT) ?
+                   (displayHeight - EXPECTED_PANEL_HEIGHT) : displayHeight,
+                 workspace, True);
+}
+
+/***********************************************************************
+ *
  *  InitializeDesktopGrid
  *
  ************************************************************************/
 
 void
-InitializeDesktopGrid( void )
+InitializeDesktopGrid( int displayWidth, int displayHeight)
 {
    int i,j,k;
 
    desktop_grid_size = desktop_data->numWorkspaces * numColumns * numRows;
    desktop_grid = (Boolean *)XtCalloc(1, desktop_grid_size);
 
-   /* want to take out space where the FP lays ... Note this only for the
-      default size of the FP.  Right now there is no dynamic way of registering
-      the FP no matter what size it is */
-
    for(i = 1; i <= desktop_data->numWorkspaces; i++)
    {
-      RegisterInGrid((int)1132, (int)115, 78, 910, i, True);
+      RegisterPanelInGrid(i, displayWidth, displayHeight);
    }
 }
 
@@ -2487,6 +2511,7 @@ RegisterInGrid(
    int row, column;
    int rowHeight, columnWidth;
    int desktop_grid_index;
+   int i,j;
 
    if(desktopIconType == LARGE)
    {
@@ -2503,16 +2528,36 @@ RegisterInGrid(
       columnWidth = (rX + width) / PIXELS_PER_COLUMN_SMALL;
    }
 
+   if (columnWidth >= numColumns)
+   {
+      columnWidth = numColumns - 1;
+   }
+   if (rowHeight >= numRows)
+   {
+      rowHeight = numRows - 1;
+   }
+
    desktop_grid_index = (workspace - 1) * numColumns * numRows;
-   if(column < numColumns && row < numRows)
-     desktop_grid[ desktop_grid_index + (column * numRows) + row] = type;
-   if(rowHeight < numRows)
-      desktop_grid[desktop_grid_index + (column * numRows) + rowHeight] = type;
-   if(columnWidth < numColumns)
-      desktop_grid[desktop_grid_index + (columnWidth * numRows) + row] = type;
-   if(rowHeight < numRows && columnWidth < numColumns)
-      desktop_grid[desktop_grid_index +
-                                   (columnWidth * numRows) + rowHeight] = type;
+
+   for (i = (column > 0) ? column : 0; i <= columnWidth ; i++)
+   {
+      for (j = (row > 0) ? row : 0; j <= rowHeight ; j++)
+      {
+         if (type)
+         {
+           /* increase count of objects at given cell */
+            desktop_grid[ desktop_grid_index + (i * numRows) + j] ++;
+         }
+         else
+         {
+           /* decrease count of objects at given cell  */
+           if (desktop_grid[ desktop_grid_index + (i * numRows) + j] > 0)
+           {
+              desktop_grid[ desktop_grid_index + (i * numRows) + j] --;
+           }
+         }
+      }
+   }
 }
 
 
@@ -2744,7 +2789,7 @@ CalculateRootCoordinates (
    ws_num = ((ws_num - 1) * numColumns * numRows);
    while(1)
    {
-      if(desktop_grid[ws_num + (column * numRows) + row] == False)
+      if(desktop_grid[ws_num + (column * numRows) + row] == 0)
       {
          if(numGridsR == 1 && numGridsC == 1)
          {
@@ -2765,8 +2810,7 @@ CalculateRootCoordinates (
          {
             for(j = 0; j < numGridsC; j++)
             {
-               if(desktop_grid[ws_num + ((column + j) * numRows) + (row + i)]
-                                                                       == True)
+               if(desktop_grid[ws_num + ((column + j) * numRows) + (row + i)] > 0)
               {
                  error = True;
                  break;
@@ -3594,7 +3638,12 @@ InitializeNewWorkspaces (
       for(j = 0; j < numColumns; j++)
          for(k = 0; k < numRows; k++)
             desktop_grid[(i * numRows * numColumns) +
-                                           (j * numRows) + k] = False;
+                                           (j * numRows) + k] = 0;
+
+      RegisterPanelInGrid( i + 1,
+                           DisplayWidth(display,screen),
+                           DisplayHeight(display, screen));
+
    }
    desktop_data->numWorkspaces = numInfo;
 

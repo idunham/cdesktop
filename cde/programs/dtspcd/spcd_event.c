@@ -84,16 +84,11 @@ void SPCD_MainLoopUntil(Boolean *flag)
   fd_set input_mask, except_mask;
   int n, fd;
   int result;
+
   do {
-    for (n=0; n<fd_vec_size; n++) {
-#if defined(linux)
-      input_mask.__fds_bits[n] = Sb_Input_Mask.__fds_bits[n];
-      except_mask.__fds_bits[n] = Sb_Except_Mask.__fds_bits[n];
-#else
-      input_mask.fds_bits[n] = Sb_Input_Mask.fds_bits[n];
-      except_mask.fds_bits[n] = Sb_Except_Mask.fds_bits[n];
-#endif
-    }
+    memcpy(&input_mask, &Sb_Input_Mask, sizeof(fd_set));
+    memcpy(&except_mask, &Sb_Except_Mask, sizeof(fd_set));
+
     
     do result=select(SPCD_max_fd + 1, FD_SET_CAST(&input_mask),
 		     FD_SET_CAST(NULL),
