@@ -105,6 +105,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <string.h>
+#include <stdint.h>
 #include <sys/stat.h>
 #include <ctype.h>
 
@@ -5074,7 +5075,7 @@ ShowChangeDirField (
 
    if (w)
    {
-      if((int)client_data == FM_POPUP)
+      if((intptr_t) client_data == FM_POPUP)
          mbar = XtParent(w);
       else
          mbar = XmGetPostedFromWidget(XtParent(w));

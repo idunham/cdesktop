@@ -120,6 +120,12 @@ extern int errno;
 #  ifdef macII
 #   define USE_CRYPT
 #  endif
+#  ifdef __FreeBSD__
+#   define USE_CRYPT
+#  endif
+#  ifdef __OpenBSD__
+#   define USE_CRYPT
+#  endif
 #  ifdef sun
 #   define USE_CRYPT
 #   if (OSMAJORVERSION >= 4)
@@ -161,8 +167,8 @@ longtochars (l, c)
     c[3] = l & 0xff;
 }
 
-static
-InitXdmcpWrapper ()
+static void
+InitXdmcpWrapper (void)
 {
     long	    sum[2];
     unsigned char   tmpkey[8];
@@ -191,25 +197,22 @@ InitXdmcpWrapper ()
 static unsigned long int next = 1;
 
 static int
-xdm_rand()
+xdm_rand(void)
 {
     next = next * 1103515245 + 12345;
     return (unsigned int)(next/65536) % 32768;
 }
 
 static void
-xdm_srand(seed)
-    unsigned int seed;
+xdm_srand(unsigned int seed)
 {
     next = seed;
 }
 #endif /* no HASXDMAUTH */
 
 #ifdef USE_ENCRYPT
-static
-bitsToBytes (bits, bytes)
-unsigned long	bits[2];
-char	bytes[64];
+static void
+bitsToBytes (unsigned long bits[2], char bytes[64])
 {
     int	bit, byte;
     int	i;
@@ -227,10 +230,11 @@ char	bytes[64];
  *  the OS's random number device.
  */
 
-#if defined(linux) || defined(CSRG_BASED)
+#if defined(linux) || defined(CSRG_BASED) || defined(sun)
 #define READ_LIMIT (sizeof (long) * 2)
 
-static sumFile (char *name, long sum[2])
+static int
+sumFile (char *name, long sum[2])
 {
   long    buf[2];
   int	  fd;
@@ -269,10 +273,8 @@ static sumFile (char *name, long sum[2])
 
 #else /* linux || CSRG_BASED */
 
-static
-sumFile (name, sum)
-char	*name;
-long	sum[2];
+static int
+sumFile (char *name, long sum[2])
 {
     long    buf[1024*2];
     int	    cnt;
@@ -308,9 +310,8 @@ long	sum[2];
 }
 #endif /* linux || CSRG_BASED */
 
-GenerateAuthData (auth, len)
-char	*auth;
-int	len;
+void
+GenerateAuthData (char *auth, int len)
 {
     long	    ldata[2];
 
@@ -444,7 +445,7 @@ InitCryptoKey( void )
 #if defined(linux) 
     /* non-blocking */
     char    *key_file = "/dev/urandom";
-#elif defined(CSRG_BASED)
+#elif defined(CSRG_BASED) || defined(sun)
     /* non-blocking */
     char    *key_file = "/dev/random";
 #else
@@ -453,7 +454,7 @@ InitCryptoKey( void )
     char    *key_file = "/dev/mem";
 #endif    
     if (cryptoInited)
-	return;
+	return 0;
 
     /*
      *  If the sumFile fails to produce a result
@@ -480,6 +481,8 @@ InitCryptoKey( void )
 
     }
     cryptoInited = 1;
+
+    return 1;
 }
 
 #endif /* HASXDMAUTH */

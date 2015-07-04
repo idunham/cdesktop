@@ -54,6 +54,7 @@
 #ifdef _AIX
 #ifdef _POWER
 #include <stdio.h>
+#include <errno.h>
 #include <sys/file.h>
 #endif /* _POWER */
 # include <usersec.h>
@@ -331,8 +332,7 @@ static int
 IOErrorHandler( Display *dpy )
 {
 
-    char *s = ((errno >= 0 && errno < sys_nerr) ? sys_errlist[errno]
-						: "unknown error");
+  const char *s = strerror(errno);
 
     LogError(ReadCatalog(
                        MC_LOG_SET,MC_LOG_FATAL_IO,MC_DEF_LOG_FATAL_IO),
@@ -644,8 +644,6 @@ int
 LoadXloginResources( struct display *d )
 {
     char	cmd[1024];
-    char	*language="";
-    char	*lang_key="";
     char	*authority="";
     char	*auth_key="";
     char        *resources = NULL;
@@ -657,14 +655,14 @@ LoadXloginResources( struct display *d )
         if (access (resources, R_OK) != 0) {
             /** fallback to the C locale for resources **/
 	    Debug("LoadXloginResources - cant access %s\n", resources);
-            Debug("\t %s.  Falling back to C.\n", sys_errlist[errno]);
+            Debug("\t %s.  Falling back to C.\n", strerror(errno));
             free(resources);
             resources = _ExpandLang(d->resources, "C");
             if (access (resources, R_OK) != 0) {
                 /** can't find a resource file, so bail **/
 	        Debug("LoadXloginResources - cant access %s.\n", resources);
                 Debug("\t %s.  Unable to find resource file.\n",
-		      sys_errlist[errno]);
+		      strerror(errno));
                 free(resources);
                 return(-1);
             }
@@ -674,28 +672,6 @@ LoadXloginResources( struct display *d )
 		authority = d->authFile;
 		auth_key = "XAUTHORITY=";
 	}
-
-	if (d->language && strlen(d->language) > 0 ) {
-		language = strdup(d->language);
-		lang_key = "-D";
-	}
-
-	/*
-	 *  replace any "-" or "." in the language name with "_". The C
-	 *  preprocessor used by xrdb does not accept "-" or "." in a name.
-	 */
-	 
-	while ( (p = strchr(language, '-')) != NULL ) {
-	    *p = '_';
-	}
-	 
-	while ( (p = strchr(language, '.')) != NULL ) {
-	    *p = '_';
-	}
-		    
-	if ( strlen(language) > 0 )
-	    free(language);
-
 
 	Debug("LoadXloginResources - loading resource db from %s\n", resources);
 	if((XresourceDB = XrmGetFileDatabase(resources)) == NULL)
@@ -713,7 +689,10 @@ LoadXloginResources( struct display *d )
 			auth_key, authority, d->xrdb, d->name, tmpname);
 	Debug ("Loading resource file: %s\n", cmd);
 
-	system (cmd);  
+	if(-1 == system (cmd)) {
+	    Debug ("system() failed on cmd '%s'\n", cmd);
+            return -1;
+        }
 
 	if (debugLevel <= 10)
 	  if (unlink (tmpname) == -1)
@@ -773,7 +752,7 @@ LoadAltDtsResources(struct display *d)
         if (access (resources, R_OK) != 0)
 	{
             Debug("LoadAltDtsResources- cant access %s.\n", resources);
-            Debug("\t %s.  Falling back to C.\n", sys_errlist[errno]);
+            Debug("\t %s.  Falling back to C.\n", strerror(errno));
 
             if (resources)
 	    {
@@ -785,7 +764,7 @@ LoadAltDtsResources(struct display *d)
             if (access (resources, R_OK) != 0)
 	    {
                 Debug("LoadAltDtsResources- cant access %s.\n", resources);
-                Debug("\t %s.\n", sys_errlist[errno]);
+                Debug("\t %s.\n", strerror(errno));
 	    }
 	    else
               strcpy(dirname[j], resources);
@@ -826,7 +805,7 @@ LoadAltDtsResources(struct display *d)
 		    {
                         Debug("LoadAltDtsResources- cant access %s.\n",
 			      resources);
-                        Debug("\t %s.\n", sys_errlist[errno]);
+                        Debug("\t %s.\n", strerror(errno));
                         continue;
 		    }
 
@@ -1519,7 +1498,9 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 
 /* setpenv() will set gid for AIX */
 #if !defined (_AIX)
-	setgid (verify->groups[0]);
+	if(-1 == setgid (verify->groups[0])) {
+            perror(strerror(errno));
+        }
 #endif
 
 #    else  /* ! NGROUPS */
@@ -1571,7 +1552,9 @@ StartClient( struct verify_info *verify, struct display *d, int *pidp )
 			LogError (ReadCatalog(
 				MC_LOG_SET,MC_LOG_NO_HMDIR,MC_DEF_LOG_NO_HMDIR),
 				home, getEnv (verify->userEnviron, "USER"));
-			chdir ("/");
+			if(-1 == chdir ("/")) {
+                                perror(strerror(errno));
+                        }
 			verify->userEnviron = setEnv(verify->userEnviron, 
 						     "HOME", "/");
 		}
@@ -1746,7 +1729,7 @@ AbortClient( int pid )
 			MC_LOG_SET,MC_LOG_NO_KILLCL,MC_DEF_LOG_NO_KILLCL));
 	    case EINVAL:
 	    case ESRCH:
-		return;
+		return 0;
 	    }
 	}
 	if (!setjmp (tenaciousClient)) {
@@ -1761,6 +1744,7 @@ AbortClient( int pid )
 	    signal (SIGALRM, SIG_DFL);
 	sig = SIGKILL;
     }
+    return 1;
 }
 
 int 
@@ -1797,6 +1781,7 @@ source( struct verify_info *verify, char *file )
     return 0;
 }
 
+/* returns 0 on failure, -1 on out of mem, and 1 on success */
 int 
 execute(char **argv, char **environ )
 {
@@ -1834,11 +1819,11 @@ execute(char **argv, char **environ )
 	 */
 	f = fopen (argv[0], "r");
 	if (!f)
-	    return;
+	    return 0;
 	if (fgets (program, sizeof (program) - 1, f) == NULL)
  	{
 	    fclose (f);
-	    return;
+	    return 0;
 	}
 	fclose (f);
 	e = program + strlen (program) - 1;
@@ -1877,6 +1862,8 @@ execute(char **argv, char **environ )
 	    ;
 	session_execve (newargv[0], newargv, environ);
     }
+
+    return 1;
 }
 
 
@@ -1931,8 +1918,10 @@ RunGreeter( struct display *d, struct greet_info *greet,
     char	*p;
     char	**env;
     char	*path;
-    struct greet_state state;
+    struct greet_state state = {};
     int 	notify_dt;
+    int		dupfp = -1;
+    int		dupfp2 = -1;
 
 #ifdef __PASSWD_ETC
 #  ifndef U_NAMELEN
@@ -1983,8 +1972,12 @@ RunGreeter( struct display *d, struct greet_info *greet,
 	 *  set up communication pipes...
 	 */
 	 
-	pipe(response);
-	pipe(request);
+	if(-1 == pipe(response)) {
+            perror(strerror(errno));
+        }
+	if(-1 == pipe(request)) {
+            perror(strerror(errno));
+        }
 	rbytes = 0;
 
 
@@ -2112,7 +2105,10 @@ RunGreeter( struct display *d, struct greet_info *greet,
 	    * Writing to file descriptor 1 goes to response pipe instead.
 	    */
 	    close(1);
-	    dup(response[1]);
+            dupfp = dup(response[1]);
+	    if(-1 == dupfp) {
+                perror(strerror(errno));
+            }
 	    close(response[0]);
 	    close(response[1]);
 
@@ -2120,7 +2116,10 @@ RunGreeter( struct display *d, struct greet_info *greet,
 	    * Reading from file descriptor 0 reads from request pipe instead.
 	    */
 	    close(0);
-	    dup(request[0]);
+            dupfp2 = dup(request[0]);
+	    if(-1 == dupfp2) {
+                perror(strerror(errno));
+            }
 	    close(request[0]);
 	    close(request[1]);
 
@@ -2135,7 +2134,7 @@ RunGreeter( struct display *d, struct greet_info *greet,
 	    if ((p = (char *) strrchr(msg, '/')) == NULL)
 		strcpy(msg,"./");
 	    else
-		*(++p) = NULL;
+		*(++p) = '\0';
 
 	    strcat(msg,"dtgreet");
 
@@ -2423,7 +2422,11 @@ RunGreeter( struct display *d, struct greet_info *greet,
 		* the master struct. When the user logs out, the
 		* resource-specified language (if any) will reactivate.
 		*/
-		Debug("Greeter returned language '%s'\n", d->language);
+                if (d->language)
+                  Debug("Greeter returned language '%s'\n", d->language);
+                else
+                  Debug("Greeter returned language (NULL)\n");
+
 
 		if (strcmp(d->language, "default") == 0) {
 		    int len = strlen(defaultLanguage) + 1;
@@ -2931,7 +2934,9 @@ static void
 TellGreeter(
   RequestHeader *phdr)
 {
-  write(request[1], phdr, phdr->length);
+  if(-1 == write(request[1], phdr, phdr->length)) {
+    perror(strerror(errno));
+  }
 }
 
 static int

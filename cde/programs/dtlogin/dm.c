@@ -62,7 +62,8 @@
 # include	<time.h>
 # include	<utime.h>
 # include	<pwd.h>
-#if defined(linux) || defined(__FreeBSD__) || defined(__NetBSD__)
+#if defined(linux) || defined(__FreeBSD__) || defined(__NetBSD__) || \
+    defined(sun)
 # include	<stdarg.h>
 #else
 # include	<varargs.h>
@@ -350,7 +351,7 @@ ScanServers( void )
 	    LogError(
 		ReadCatalog(MC_LOG_SET,MC_LOG_NO_SRVACC,MC_DEF_LOG_NO_SRVACC),
 		servers);
-	    return;
+	    return 0;
 	}
 	if (ServersModTime == 0)
 	{
@@ -370,6 +371,7 @@ ScanServers( void )
     {
 	ParseDisplay (servers, acceptableTypes, NumTypes, &puser);
     }
+    return 1;
 }
 
 static void 
@@ -797,7 +799,7 @@ CheckDisplayStatus( struct display *d )
             Debug("Check %s: status=%d wakeupTime=%d\n", d->name,
                   d->status, wakeupTime);
 	    if (d->status == suspended && wakeupTime >= 0)
-		if ( GettyRunning(d) || (strcmp(d->gettyLine,"??") == 0))
+              if ( GettyRunning(d) || (d->gettyLine && (strcmp(d->gettyLine,"??") == 0)) )
 		    if ( wakeupTime == 0 ) {
 			Debug("Polling of suspended server %s started.\n",
 				d->name);
@@ -861,7 +863,7 @@ StartDisplay(
      */
     if (d->displayType.origin == FromFile && dt_shutdown ) {
 	RemoveDisplay(d);
-	return;
+	return 0;
     }
     
     {
@@ -949,7 +951,7 @@ StartDisplay(
 		LogError ((unsigned char *)"All DT utmp IDs already in use. Removing display %s\n",
 			d->name);
 		RemoveDisplay(d);
-		return;
+		return 0;
 	    }
 	}
 #endif
@@ -1024,7 +1026,7 @@ StartDisplay(
 
 	    if (!StartGetty(d))
 		RemoveDisplay (d);
-	    return;
+	    return 0;
 	}
     }
     else
@@ -1118,7 +1120,7 @@ StartDisplay(
 	    
 	    p = DisplayName;
 	    
-	    strncpy(p, d->name, sizeof(DisplayName));
+	    strncpy(p, d->name, sizeof(DisplayName) - 1);
 	    DisplayName[sizeof(DisplayName)-1] = '\0';
 	    
 	    if ( (s = strchr(p,':')) != NULL )
@@ -1203,6 +1205,7 @@ StartDisplay(
 	d->status = running;
 	break;
     }
+    return 1;
 }
 
 static void
@@ -1442,12 +1445,12 @@ SetTitle( char *name, char *ptr )
      *  remove domain qualifiers and screens from name...
      */
 
-    if ( (p = malloc(strlen(name) + 1)) == NULL) return;
+    if ( (p = malloc(strlen(name) + 1)) == NULL) return 0;
     strcpy(p, name);
 
     if ( (s = strchr(p,':')) == NULL ) {
 	free(p);
-	return;
+	return 0;
     }
     
     if ( (t = strchr(s,'.')) != NULL )
@@ -1483,6 +1486,7 @@ SetTitle( char *name, char *ptr )
 
     free(p);
 #endif
+    return 1;
 }
 
 
@@ -1746,11 +1750,15 @@ GettyRunning( struct display *d )
         strcpy(utmp.ut_line,ttynm);
         close(fd);
     }
-    else
-        strncpy(utmp.ut_line, d->gettyLine, sizeof(utmp.ut_line));
+   else
+     {
+        strncpy(utmp.ut_line, d->gettyLine, sizeof(utmp.ut_line) - 1);
+        utmp.ut_line[sizeof(utmp.ut_line) - 1] = 0;
+     }
 
 #else
-    strncpy(utmp.ut_line, d->gettyLine, sizeof(utmp.ut_line));
+    strncpy(utmp.ut_line, d->gettyLine, sizeof(utmp.ut_line) - 1);
+    utmp.ut_line[sizeof(utmp.ut_line) - 1] = 0;
 #endif
     
     Debug("Checking for a getty on line %s.\n", utmp.ut_line);

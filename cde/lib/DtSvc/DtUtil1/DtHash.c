@@ -94,6 +94,7 @@ Author:  Bart Smaalders 1/89
 #include "DtHash.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 
 static int hash_string(const unsigned char * s, int modulo);
@@ -152,7 +153,7 @@ void ** _DtUtilGetHash(DtHashTbl t, const unsigned char * key)
   if(tbl->hash_type == String_Key)
     tmp = tbl->table[bucket = hash_string(key, tbl->size)];
   else
-    tmp = tbl->table[bucket = abs((int)key) % tbl->size];
+    tmp = tbl->table[bucket = abs((int)(intptr_t)key) % tbl->size];
 
   if(tbl->hash_type == String_Key)
     while(tmp!=NULL)
@@ -205,7 +206,7 @@ void ** _DtUtilFindHash(DtHashTbl t, const unsigned char * key)
     }
   else
     {
-      tmp = tbl->table[abs((int)key) % tbl->size];
+      tmp = tbl->table[abs((int)(intptr_t)key) % tbl->size];
       for(;tmp!=NULL; tmp = tmp->next_entry)
 	if(tmp->key == key)
 	  return((void *)&tmp->data);
@@ -224,7 +225,7 @@ void * _DtUtilDelHash(DtHashTbl t, const unsigned char * key)
   if(tbl->hash_type == String_Key)
     bucket = hash_string(key, tbl->size);
   else
-    bucket = abs((int)key) % tbl->size;
+    bucket = abs((int)(intptr_t)key) % tbl->size;
 
   if((tmp = tbl->table[bucket])==NULL)
     return(NULL);

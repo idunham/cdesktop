@@ -68,11 +68,10 @@
 # include	<ctype.h>
 # include	<errno.h>
 
-char *
-Print8Address (ARRAY8Ptr   Address);
+static char *Print8Address (ARRAY8Ptr   Address);
 
 
-static
+static int
 FormatBytes (
     unsigned char *data,
     int     length,
@@ -93,7 +92,7 @@ FormatBytes (
     return 1;
 }
 
-static
+static int
 FormatARRAY8 (
     ARRAY8Ptr   a,
     char        *buf,
@@ -110,6 +109,7 @@ typedef struct _IndirectUsers {
 
 static IndirectUsersPtr	indirectUsers;
 
+int
 RememberIndirectClient (
     ARRAY8Ptr   clientAddress,
     CARD16      connectionType)
@@ -132,6 +132,7 @@ RememberIndirectClient (
     return 1;
 }
 
+void
 ForgetIndirectClient (
     ARRAY8Ptr   clientAddress,
     CARD16      connectionType)
@@ -156,6 +157,7 @@ ForgetIndirectClient (
     }
 }
 
+int
 IsIndirectClient (
     ARRAY8Ptr   clientAddress,
     CARD16      connectionType)
@@ -171,7 +173,7 @@ IsIndirectClient (
 
 extern char *NetaddrPort();
 
-static
+static int
 FormatChooserArgument (
     char    *buf,
     int     len)
@@ -271,7 +273,7 @@ RegisterIndirectChoice (
 {
     ChoicePtr	c;
     int		insert;
-    int		found;
+    int		found = 0;
 
     Debug ("Got indirect choice back (%s)\n", Print8Address(clientAddress));
     for (c = choices; c; c = c->next) {
@@ -323,7 +325,7 @@ RegisterIndirectChoice (
 }
 
 #ifdef notdef
-static
+static void
 RemoveIndirectChoice (clientAddress, connectionType)
     ARRAY8Ptr	clientAddress;
     CARD16	connectionType;
@@ -372,6 +374,7 @@ AddChooserHost (
     }
 }
 
+int
 ProcessChooserSocket (
     int fd)
 {
@@ -389,7 +392,7 @@ ProcessChooserSocket (
     if (client_fd == -1)
     {
 	LogError ((unsigned char *)"Cannot accept chooser connection\n");
-	return;
+	return 0;
     }
     Debug ("Accepted %d\n", client_fd);
     
@@ -422,9 +425,11 @@ ProcessChooserSocket (
     }
 
     close (client_fd);
+    return 1;
 }
 
-  RunChooser (
+void
+RunChooser (
     struct display  *d)
 {
     char    **args, **parseArgs(), **systemEnv();
@@ -479,7 +484,7 @@ ProcessChooserSocket (
     exit (REMANAGE_DISPLAY);
 }
 
-char *
+static char *
 Print8Address (
     ARRAY8Ptr   Address)
 {

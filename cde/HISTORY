@@ -5,6 +5,251 @@ use 'git log', or peruse the commit history at:
 
 https://sourceforge.net/p/cdesktopenv/code/commit_browser
 
+# 2.2.3 05/09/2015
+
+This release incorporates several hundred fixes identified by various
+Coverity scans and patches supplied by users.  In addition,
+OpenIndiana/OpenSolaris support was significantly enhanced thanks to
+Ulrich Wilkens, and a few hundred compiler warnings were squashed.
+
+There is also a new default CDE logo :)
+
+Here is the shortlog:
+
+Edmond ORIGNAC (1):
+      Fix dtprintinfo parser
+
+Isaac Dunham (1):
+      contrib/rc/linux/dtlogin: Make the init script work.
+
+Johannes von Rotz (1):
+      Let "make World" run through on OpenBSD
+
+Jon Trulson (63):
+      contrib/rc/freebsd: Add FreeBSD start script from Douglas Carmichael
+      Add new Dtlogo from Jeff Pierquet.  Original renamed to TOGDtlogo.pm
+      dtmail: MotifCmds.C: NULL is not False
+      ttsnoop: NULL is not 0
+      Revert "ttsnoop: NULL is not 0"
+      dtappbuilder/dtcodegen: Fix up some warnings, remove use of sys_errlist[].
+      dthelp: fixup some warnings with special.h(s)
+      dttypes: use regex on linux too.
+      dtappbuilder: abmf.c: more warnings killed
+      it_IT.ISO8859-1/types/_common.dt.tmsg: Apply manual one-line patch
+      DtHelp: Coverity (memory corruption)
+      DtSvc: Coverity (memory corruption)
+      DtSvc: Coverity (memory corruption)
+      DtTerm: Coverity (memory corruption)
+      DtWidget: Coverity (memory corruption)
+      ttauth: Coverity (memory corruption)
+      dtappbuilder: Coverity (memory corruption)
+      dtsession: Coverity (memory corruption)
+      dtsession: Coverity (memory corruption)
+      imake: Coverity (memory corruption, moderate)
+      DtHelp: Coverity (memory corruption, moderate)
+      DtHelp: Coverity (memory corruption, moderate)
+      DtSearch: remove bogus debug block
+      DtSvc: Coverity (memory corruption, moderate)
+      DtSvc/DtEncap: Coverity (memory corruption, moderate)
+      DtSvc/DtUtil1: Coverity (memory corruption, moderate)
+      DtSvc/DtUtil2: Coverity (memory corruption, moderate)
+      DtTerm: Coverity (memory corruption, moderate)
+      DtTerm: Coverity (memory corruption, moderate)
+      csa: Coverity (memory corruption, moderate)
+      ttauth: Coverity (memory corruption, moderate)
+      ttsession: Coverity (memory corruption, moderate)
+      tt/mini_isam: Coverity (memory corruption, moderate)
+      tt/mini_isam: Coverity (memory corruption, moderate)
+      dtcalc: Coverity (memory corruption, moderate)
+      dtcalc: Coverity (memory corruption, moderate)
+      dtlogin: Coverity (memory corruption, moderate)
+      dtlogin: Coverity (memory corruption, moderate)
+      dtprintinfo: Coverity (memory corruption, moderate)
+      dtscreen: Coverity (memory corruption, moderate)
+      dtsession: Coverity (memory corruption, moderate)
+      dtwm/PopUpMenu: Coverity (memory corruption, moderate)
+      dtwm/WmFP: Coverity (memory corruption, moderate)
+      dtlogin/xdmcp: fixup many warnings and a possible declaration bug
+      DtXinerama: no need to check unsigned int < 0 (CID:86121)
+      Merge branch 'master' of ssh://git.code.sf.net/p/cdesktopenv/code
+      dtsession/SmGlobals: fixup 17 coverity issues.
+      dtsession/SmCommun: fix bogus check (CID 89326)
+      dtsession/SmDB: error handling issues (CID 87778, 87926)
+      dtsession/SmLock: potential null deref (CID 87561, 87957, 88181)
+      dtsession/SmGlobals: use of tainted string (CID 89450)
+      dtsession/SmGlobals: unlink mkstemp generated files.
+      dtsession/SmGlobals: re-add smGD.savePath to generated paths, was lost in mkstemp changes.
+      dtsession/SmRestore: fixup 8 coverity issues.
+      dtsession/SmRestore: redo defaultCwd detection in StartClient() to be safer
+      dtsession/SmSave: get rid of use of tempnam (CID 89359)
+      dtsession/SmSave: use absolute path to rm in system()
+      dtsession/SmUI: fix tainted var (CID 88216)
+      dtsession/SrvFile_io: fix CID's 88299 and 89441
+      dtsession/SrvPalette: fix CID 89227
+      Merge branch 'coverity_dtsession'
+      dtscreen: don't use old version of round() on linux either
+      cde: change revision to 2.2.3
+
+Matthew Howkins (3):
+      libtt: Fix 'Missing return statement' errors detected by static analysis
+      libtt: Fix some uninitialized variables detected by Coverity
+      libtt: Change to standard function prototypes in ttauth. Fix some compiler warnings by adding #includes
+
+Peter Howkins (53):
+      dtlogin: start to resolve static analysis warnings
+      libDtWidget: Resolve some static analyser warnings
+      dtlogin: Resolve 27 compiler warnings
+      dtlogin: resolve 8 compiler warnings.
+      dtlogin: resolve more static analysis warnings
+      Merge branch 'master' of ssh://git.code.sf.net/p/cdesktopenv/code
+      dtcalc: resolve 13 compiler warnings on 64 bit builds.
+      dsdm: resolve coverity warnings CID 86139 86255 86331 86345 86418 86517 86526 86567 86590 86616
+      dsdm: convert k&r function declarations to ansi, and correct the warnings this then uncovered.
+      dtaction: resolve 2 compiler warnings.
+      dtwm: resolve 92 compiler warnings (related to 64 bit pointer to int coversions)
+      dtstyle: resolve 30 compiler warnings.
+      dtsr: resolve all 12 compiler warnings.
+      dtmail: Resolve 50 compiler warnings.
+      dtdocbook: resolve 49 compiler warnings.
+      dticon: resolve 3 compiler warnings
+      dtfile: resolve 19 compiler warnings.
+      dtmail: add a stdint.h include for openbsd, as reported by Daniel Diaz via the wiki.
+      dtstyle: Fix CID 100252
+      dtcm: Resolve 303 compiler warnings.
+      dtpad: Resolve 7 compiler warnings.
+      dthello: Resolve 8 compiler warnings that would be introduced with -Wall
+      libDtHelp: Resolve 11 compiler warnings.
+      libDtPrint: Resolve the 1 remaining compiler warning.
+      libDtSvc: Resolve 28 compiler warnings.
+      dtscreen: convert K&R prototypes to ansi C
+      dtcm: Resolve CID 87384
+      dtcm: Resolve CID 87408
+      dtcm: Resolve CID 87562
+      dtcm: Resolve CID 87713
+      dtcm: Resolve CID 87801
+      dtcm: Resolve CID 87822
+      dtcm: Resolve CID 87983
+      dtcm: Resolve CID 88003
+      dtfile: Resolve CID 87308
+      dtfile: Resolve CID 87776. OkCallback is of type XtCallbackProc, it doesn't return one
+      dtfile: Resolve CID 88133, 88261
+      dtfile: Resolve CID 88199
+      dtfile: Resolve CID 89319
+      dtfile: Resolve CID 89009
+      dtfile: Resolve CID 88830
+      dtfile: Resolve CID 89277
+      dtprintinfo: Resolve CID 87253
+      dtudcfonted: Resolve CID 86153
+      dtudcfonted: Resolve CID 86232
+      dtudcfonted: Resolve CID 86389
+      dtudcfonted: Resolve CID 86280
+      dtudcfonted: Resolve CID 86328
+      dtudcfonted: Resolve CID 86391
+      dtudecfonted: Resolve CID 86417
+      dtudcfonted: Resolve CID 86495
+      dtudcfonted: Resolve CID 86547
+      dtudcfonted: Resolve CID 86560
+
+Stuart Brady (1):
+      DtTerm: fix formatted text in history buffer
+
+Ulrich Wilkens (7):
+      Fix panel right click
+      Resolve many build warnings
+      OpenIndiana and Solaris port
+      Fix FreeBSD 10.1 build
+      Support for new Solaris/OpenIndiana versions
+      Fix broken build on OpenBSD
+      Remove warnings on Linux with glibc 2.20
+
+alx (1):
+      dtcopy: Fix file removal
+
+
+# 2.2.2 07/27/2014
+
+A lot of fixes and improvements in this release.  CDE can be built on
+more modern Linuxes and BSDs.  An initial stab at illimios support is
+also present.
+
+Here is the shortlog:
+
+Eugene Doudine (7):
+      Fixes the bug #17 dtsession can't validate passwords longer than 8 characters when the session is locked
+      Fixed bug #27 dtfile space handling bug
+      Fixed bug #32 dtfile table formatting bug with non-latin filenames
+      Fixes the off-by-one bug in RegisterInGrid(), which caused dtfile's desktop icons on the right edge of the screen (if desktop width is not a multiple of icon with) to be registered on the next workspace or (in the case of the last workspace) beyond the desktop_grid array (possibly causing segfaults).
+      Fixes several issues with grid registration of the dtwm panel on dtfile startup and on workspace addition:
+      Fixes a small bug in grid registration: when an object is placed over another object (can be done manually) and then removed from there, the registration of the covered object is removed as well (that is it's cell is considered empty).
+      Fixes the bug, which caused dtterm to show stripes of wrong color between text lines when using fontsets that include fonts of slightly different heights.
+
+Jon Trulson (52):
+      update HISTORY file for 2.2.1, though a little too late :)
+      building_release_archive: add some steps and clean up
+      linux depend: stop using makedepend, use gcc instead
+      libDtTerm: add include <stdio.h> so FILE is properly defined.
+      linux: Use installed X11 header files rather than requiring /imports/x11/include
+      nsgmls: fix up some gcc 4.8 warnings.
+      linux.cf: fix typo and some formatting.
+      linux: move dependancy handling out of linux.cf and into new lnxDep.rules file.
+      mp_rpc_server.C: limit iteration of svc_fdset to FD_SETSIZE, as per spec.
+      dtdocbook/instant: *always* link with local libtcl.a
+      dtpad: stub out XmPrint stuff if there is no XmPrint support.
+      dtmail: stub out XmPrint stuff if there is no XmPrint support.
+      dtcm: stub out XmPrint stuff if there is no XmPrint support.
+      dtinfo: stub out XmPrint stuff if there is no XmPrint support.
+      linux: libDtSearch requires linking with -lm
+      libcsa: fix up some stupidness.
+      tt_xdr_utils.h: fix build error on linux/bsd introduced with illumos initial patch.
+      Updated Greek (el_GR.UTF-8) translations from Antonis Tsolomitis.
+      PrintTopics.c: fix up some warnings
+      pax.h: include stdio.h
+      getdate.y: include string.h
+      Icon.c: include stdlib.h
+      localized/util/merge.h: include string.h and fix up some warnings
+      Threads.C: NULL is not 0
+      MotifUI.C: NULL is not 0
+      dtcm/server/: just return NULL, not the address of a dummy local variable.  Geez.
+      cleanup: eliminate "implicit declaration" warnings.
+      linux.cf: turn off writable strings warnings (write-strings)
+      linux: build with thread safety and REENTRANT enabled.
+      dtcm/reminders.c: NULL is not 0
+      dtcm/rfp.c: NULL is not 0
+      cleanup: eliminate missing sentinel warnings
+      xtclient.c, spcd_event.c: stop referencing fds_bits directly
+      linux.cf: with fds_bits fixes, stop using _POSIX_C_SOURCE=199309L and _XOPEN_SOURCE defines
+      xtclient.c: fix debug statement regarding fd number
+      dtsession: screensaver don't pass random attributes to XScreenSaverSetAttributes()
+      InterruptibleCmd.C, WorkingDialogManager.C: NULL is not 0
+      AttachArea.C: NULL is not 0, sprintf needs a format
+      RoamInterruptibleCmd.C: NULL is not 0
+      RoamMenuWindow.C: NULL is not 0
+      SendMsgDialog.C: NULL is not 0
+      WMSaveSession.C: NULL is not 0
+      ttsnoop.C.src: NULL is not 0
+      dtappbuilder: bil_store.c: don't return local variables
+      fr_FR.ISO8859-1/types/_common.dt.tmsg: Fix up a couple of backslash errors.
+      contrib/: add vcal2xapia from Edmond Orignac
+      Added additional info to vcal2xapia/README
+      contrib/: add desktop2dt from Isaac Dunham
+      el_GR _common.dt.tmsg: fix corrupted msg line at line 1763
+      site.def: create new DtDocLocalesToBuild define
+      Version change to 2.2.2
+      Fixup UDB databases to fix a problem introduced with FreeBSD 10 patch.
+
+Peter Tribble (1):
+      initial illumos port
+
+Ulrich Wilkens (4):
+      Fix dtfile and dtterm on NetBSD
+      Fix cpp output on Ubuntu 13
+      Fix dtinfo search engine
+      FreeBSD 10 clang port
+
+alx (2):
+      dtstyle: enable palette editor on true/direct color screens
+      DtWidget: Don't free random pointer on Control widget destruction
+
 
 # 2.2.1 03/01/2014
 

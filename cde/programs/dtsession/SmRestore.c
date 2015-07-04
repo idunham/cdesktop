@@ -58,6 +58,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #ifdef _SUN_OS   /* to get the define for NOFILE */
 #include <sys/param.h>
 #endif /* _SUN_OS */
@@ -590,7 +591,7 @@ RestoreState( void )
 	      fileSize = MAXLINE + 1;
 	  }
 
-	  line = (unsigned char *) malloc ((fileSize + 1) * sizeof(char *));
+	  line = malloc(fileSize + 1);
 	  if (line == NULL)
 	  {
 	      line = fallBackLine;
@@ -828,6 +829,8 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
     char *argv[20]; 
     va_list  args;
 
+#if 0
+    /* JET - this seems like a bad (and unused) idea */
     /*
      * Check for alternate resource loader.
      */
@@ -835,6 +838,9 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
      {
        pgrm = CDE_INSTALLATION_TOP "/bin/dtsession_res";
      }
+#else
+       pgrm = CDE_INSTALLATION_TOP "/bin/dtsession_res";
+#endif
 
     /*
      * By convention, exec() wants arg0 to be the program name. Ex: if pgrm
@@ -914,7 +920,9 @@ RestoreResources( Boolean errorHandlerInstalled, ... )
 	{
             char   clientMessage[MAXPATHLEN + 256];
 
-	    sprintf(clientMessage, ((char *)GETMESSAGE(16, 1, "Unable to exec process %s.  No session resources will be restored.")), pgrm);
+            memset(clientMessage, 0, MAXPATHLEN + 256);
+	    snprintf(clientMessage, (MAXPATHLEN + 256) - 1,
+                     ((char *)GETMESSAGE(16, 1, "Unable to exec process %s.  No session resources will be restored.")), pgrm);
 	    PrintErrnoError(DtError, clientMessage);
 	    SM_EXIT(-1);
 	}
@@ -1284,7 +1292,7 @@ RestoreSettings( void )
 	    ptrSize += 50;
 	    restorePtrArray = (char **)SM_REALLOC((char *)
 						  restorePtrArray, ptrSize *
-						  sizeof(char **));
+						  sizeof(char *));
 	    if(restorePtrArray == NULL)
 	    {
 		PrintErrnoError(DtError, smNLS.cantMallocErrorString);
@@ -1637,8 +1645,10 @@ RestoreIndependentResources( void )
 	    sessionType = SM_CURRENT_FONT_DIRECTORY;
 	}
 
-	sprintf(fontPath, "%s/%s/%s/%s.%s", smGD.savePath, sessionType,
-		currentLangPtr, SM_FONT_FILE, sessionRes);
+        memset(fontPath, 0, MAXPATHLEN + 1);
+	snprintf(fontPath, MAXPATHLEN, "%s/%s/%s/%s.%s",
+                 smGD.savePath, sessionType,
+                 currentLangPtr, SM_FONT_FILE, sessionRes);
 	status = stat(fontPath, &buf);
 	if(status == -1)
 	{
@@ -1646,16 +1656,16 @@ RestoreIndependentResources( void )
 	     * User has nothing there - look in the system defaults
 	     * first in the language dep -then in lang independent
 	     */
-            fontPath[0] = '\0';
+            memset(fontPath, 0, MAXPATHLEN + 1);
 
             if((currentLangPtr != NULL) && (*currentLangPtr != 0))
             {
                 strcat(fontPath, "/");
-                strcat(fontPath, currentLangPtr);
+                strncat(fontPath, currentLangPtr, MAXPATHLEN);
             }
 
-            strcat(fontPath, "/");
-            strcat(fontPath, SM_SYSTEM_FONT_FILE);
+            strncat(fontPath, "/", MAXPATHLEN);
+            strncat(fontPath, SM_SYSTEM_FONT_FILE, MAXPATHLEN);
 
             FixPath(fontPath);
 
@@ -1665,8 +1675,9 @@ RestoreIndependentResources( void )
                 if((currentLangPtr != NULL) && (*currentLangPtr != 0) &&
                    (strcmp(currentLangPtr, "C")))
                 {
-                   strcpy(fontPath, "/C/");
-                    strcat(fontPath, SM_SYSTEM_FONT_FILE);
+                    memset(fontPath, 0, MAXPATHLEN + 1);
+                    strcpy(fontPath, "/C/");
+                    strncat(fontPath, SM_SYSTEM_FONT_FILE, MAXPATHLEN);
 
                     FixPath(fontPath);
 		
@@ -1810,7 +1821,7 @@ static int
 RestoreClients( void )
 {
     unsigned char *lineP, *string;
-    char *pch, *dispPtr;
+    char *pch, *dispPtr = NULL;
     char *dispEnv, *dispSav, *dispEnvHelpview, *dispSavHelpview;
     unsigned char *hostPtr=NULL, *cmdPtr=NULL, *hintPtr = NULL;
     unsigned char *remoteDisplay;
@@ -2060,6 +2071,7 @@ RestoreClients( void )
 				SM_FREE((char *) remoteBuf[i]);
 			    }
 			}
+                        free(displayName);
 			return(-1);
 		    }
 		    cmdPtr = NULL;
@@ -3492,14 +3504,20 @@ StartClient(
 					smRes.ignoreEnvironment, ',');
 	}
 
-	if (!defaultCwd) {
-		if (getenv ("HOME"))
-			defaultCwd = strdup (getenv ("HOME"));
-		else
-			defaultCwd = getcwd (NULL, MAXPATHLEN + 1);
-
-		(void) gethostname (localHost, MAXHOSTNAMELEN);
-	}
+	if (!defaultCwd) 
+          {
+            char *tstr = getenv("HOME");
+            if (tstr)
+              {
+                int slen = strlen(tstr) + 1;
+                defaultCwd = XtCalloc(1, slen);
+                strncpy(defaultCwd, tstr, slen - 1);
+              }
+            else
+              defaultCwd = getcwd (NULL, MAXPATHLEN + 1);
+            
+            (void) gethostname (localHost, MAXHOSTNAMELEN);
+          }
 
 	if (!cwd) {
 		cwdNull = True;

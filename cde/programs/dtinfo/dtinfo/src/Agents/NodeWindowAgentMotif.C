@@ -209,6 +209,12 @@ xList<UAS_Pointer<UAS_Common> > g_tab_list;
 
 extern AppPrintData * l_AppPrintData; 
 
+extern "C"
+{
+  typedef void (*resize_cb_ptr)();
+  typedef void (*hypertext_cb_ptr)();
+}
+
 #ifdef CV_HYPER_DEBUG
 void
 #else
@@ -630,9 +636,11 @@ g_view_mark()
 }
 
 
+#if 0
 static unsigned
 find_segment_offset (_DtCvSegment *start, const _DtCvSegment *target,
 		     unsigned &offset);
+#endif
 
 static void
 arm_callback (void *client_data)
@@ -1751,8 +1759,8 @@ NodeWindowAgent::create_ui()
 			     FALSE,		// traversal flag
 			     1,			// rows
 			     1,			// columns
-			     (void(*)()) hypertext_cb, // hypertext cb
-			     (void(*)())resize_cb,     // resize cb
+			     (hypertext_cb_ptr) hypertext_cb, // hypertext cb
+			     (resize_cb_ptr) resize_cb,       // resize cb
 			     0,			// exec ok routine
 			     this,		// client_data
 			     defaultList	// default font list
@@ -3039,7 +3047,7 @@ NodeWindowAgent::make_bookmark (Boolean edit, MarkCanvas* refmark)
   {
     char *name;
     _DtCanvasGetSelection(f_help_dsp_area->canvas,
-			  _DtCvSELECTED_TEXT, ((_DtCvPointer *)&name));
+			  _DtCvSELECTED_TEXT, ((_DtCvPointer *)(void*)&name));
 
 #ifdef BOOKMARK_DEBUG
     cerr << "Bookmark Name: [" << name << "]" << endl;
@@ -4451,6 +4459,7 @@ NodeWindowAgent::SetTopic(_DtCvTopicPtr topic)
 // stack of the parents
 
 
+#if 0
 static _DtCvSegment *
 contains(_DtCvSegment *root, _DtCvSegment *segment)
 {
@@ -4527,6 +4536,7 @@ next_string_segment(_DtCvSegment *root, _DtCvSegment *start)
 
   return 0;
 }
+#endif
 
 
 
@@ -4650,6 +4660,7 @@ NodeWindowAgent::create_canvas_mark(_DtCvHandle  canvas,
   return mark_canvas ;
 }
 
+#if 0
 static unsigned
 find_segment_offset (_DtCvSegment *start, const _DtCvSegment *target,
 		     unsigned &offset)
@@ -4701,6 +4712,7 @@ find_segment_offset (_DtCvSegment *start, const _DtCvSegment *target,
   
   return found ;
 }
+#endif
 
 void
 NodeWindowAgent::link_to (const char *locator)

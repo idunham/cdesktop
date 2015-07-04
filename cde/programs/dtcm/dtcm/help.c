@@ -52,6 +52,7 @@ static char sccsid[] = "@(#)help.c 1.19 95/03/28 Copyr 1991 Sun Microsystems, In
 #endif
 
 #include <EUSCompat.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -120,7 +121,7 @@ void show_main_help(Widget w, XtPointer clientData, XtPointer cbs)
  
         ac = 0;
         XtSetArg(al[ac], DtNhelpType, DtHELP_TYPE_TOPIC); ac++;
-        switch ((int)clientData) {
+        switch ((intptr_t)clientData) {
             case HELP_OVERVIEW:
         	XtSetArg(al[ac], DtNhelpVolume, "Calendar"); ac++;
                 XtSetArg(al[ac], DtNlocationId, "_HOMETOPIC"); ac++;
@@ -149,7 +150,7 @@ void show_main_help(Widget w, XtPointer clientData, XtPointer cbs)
                while (!XtIsSubclass(w, applicationShellWidgetClass))
                    w = XtParent(w);
  
-               status = DtHelpReturnSelectedWidgetId(w, NULL, &selWidget);     
+               status = DtHelpReturnSelectedWidgetId(w, 0, &selWidget);     
                switch ((int)status)
                   {
                     case DtHELP_SELECT_ERROR:

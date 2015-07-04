@@ -101,6 +101,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdint.h>
 #if defined(CSRG_BASED)
 #include <sys/param.h>
 #include <sys/mount.h>
@@ -704,10 +705,14 @@ WriteTrashEntries( void )
 
       /* Remove the original information file, and move the new one */
       (void) fclose(newFile);
-      (void) chown(NewTrashInfoFileName, getuid(), getgid());
+      if(-1 == chown(NewTrashInfoFileName, getuid(), getgid())) {
+	  return( False );      
+      }
       (void) remove(TrashInfoFileName);
       (void) rename(NewTrashInfoFileName, TrashInfoFileName);
-      (void) chown(TrashInfoFileName, getuid(), getgid());
+      if(-1 == chown(TrashInfoFileName, getuid(), getgid())) {
+	  return( False );      
+      }
       return( True );
    }
    else
@@ -2830,7 +2835,7 @@ MoveToTrashProcess(
       to = CreateTrashFilename(baseName, TRUE);
 
       /* move file to the trash directory */
-      success = FileManip((Widget)pipe_fd, MOVE_FILE, path, to, TRUE,
+      success = FileManip((Widget) (intptr_t) pipe_fd, MOVE_FILE, path, to, TRUE,
                           FileOpError, True, TRASH_DIRECTORY);
       if (success)
       {
@@ -3366,7 +3371,12 @@ MoveToTrash(
 #endif /* SUN_PERF */
 
    /* create a pipe */
-   pipe(pipe_fd);
+   if(-1 == pipe(pipe_fd)) {
+       fprintf(stderr,
+		"%s:  pipe failed error %d=%s\n",
+		pname, errno, strerror(errno));
+       return;
+   }
 
    /* fork the process that does the actual work */
    pid = fork();
@@ -3512,7 +3522,7 @@ RestoreProcess(
       if (to != NULL)
       {
 
-         status = RestoreObject((Widget)pipe_fd, MOVE_FILE, from,to,
+         status = RestoreObject((Widget) (intptr_t) pipe_fd, MOVE_FILE, from,to,
 			TRUE, FileOpError, False, NOT_DESKTOP,CheckedAlready);
          /* restore was successful */
          if(status == (int) True)
@@ -3756,7 +3766,12 @@ RestoreFromTrash(
    cb_data->msg = msg;
 
    /* create a pipe */
-   pipe(pipe_fd);
+   if(-1 == pipe(pipe_fd)) {
+       fprintf(stderr,
+		"%s: pipe failed, error %d=%s\n",
+		pname, errno, strerror(errno));
+       return;
+   }
 
    /* fork the process that does the actual work */
    pid = fork();
@@ -4076,7 +4091,12 @@ EmptyTrash(
    cb_data->msg = msg;
 
    /* create a pipe */
-   pipe(pipe_fd);
+   if(-1 == pipe(pipe_fd)) {
+       fprintf(stderr,
+		"%s: pipe failed, error %d=%s\n",
+		pname, errno, strerror(errno));
+       return;
+   }
 
    /* fork the process that does the actual work */
    pid = fork();

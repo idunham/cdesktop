@@ -45,6 +45,10 @@ in this Software without prior written authorization from The Open Group.
 
 #include "def.h"
 
+static int deftype();
+static int zero_value();
+static int merge2defines();
+
 extern char	*directives[];
 extern struct inclist	maininclist;
 
@@ -56,7 +60,7 @@ gobble(filep, file, file_red)
 	register char	*line;
 	register int	type;
 
-	while (line = our_getline(filep)) {
+	while ((line = our_getline(filep))) {
 		switch(type = deftype(line, filep, file_red, file, FALSE)) {
 		case IF:
 		case IFFALSE:
@@ -110,7 +114,7 @@ int deftype (line, filep, file_red, file, parse_it)
 	int	parse_it;
 {
 	register char	*p;
-	char	*directive, savechar;
+	char	*directive, savechar, *q;
 	register int	ret;
 
 	/*
@@ -167,6 +171,11 @@ int deftype (line, filep, file_red, file, parse_it)
 	 */
 	while (*p == ' ' || *p == '\t')
 		p++;
+	q = p + strlen(p);
+	do {
+		q--;
+	} while (*q == ' ' || *q == '\t');
+	q[1] = '\0';
 	switch (ret) {
 	case IF:
 		/*
@@ -184,7 +193,7 @@ int deftype (line, filep, file_red, file, parse_it)
 		/*
 		 * separate the name of a single symbol.
 		 */
-		while (isalnum(*p) || *p == '_')
+		while (isalnum((int)*p) || *p == '_')
 			*line++ = *p++;
 		*line = '\0';
 		break;
@@ -227,7 +236,7 @@ int deftype (line, filep, file_red, file, parse_it)
 		/*
 		 * copy the definition back to the beginning of the line.
 		 */
-		strcpy (line, p);
+		memmove (line, p, strlen(p) + 1);
 		break;
 	case ELSE:
 	case ENDIF:
@@ -260,7 +269,7 @@ struct symtab **fdefined(symbol, file, srcfile)
 	if (file->i_flags & DEFCHECKED)
 		return(NULL);
 	file->i_flags |= DEFCHECKED;
-	if (val = slookup(symbol, file))
+	if ((val = slookup(symbol, file)))
 		debug(1,("%s defined in %s as %s\n",
 			 symbol, file->i_file, (*val)->s_value));
 	if (val == NULL && file->i_list)
@@ -289,12 +298,12 @@ struct symtab **isdefined(symbol, file, srcfile)
 {
 	register struct symtab	**val;
 
-	if (val = slookup(symbol, &maininclist)) {
+	if ((val = slookup(symbol, &maininclist))) {
 		debug(1,("%s defined on command line\n", symbol));
 		if (srcfile != NULL) *srcfile = &maininclist;
 		return(val);
 	}
-	if (val = fdefined(symbol, file, srcfile))
+	if ((val = fdefined(symbol, file, srcfile)))
 		return(val);
 	debug(1,("%s not defined in %s\n", symbol, file->i_file));
 	return(NULL);
@@ -309,7 +318,7 @@ zero_value(exp, filep, file_red)
 	register struct filepointer *filep;
 	register struct inclist *file_red;
 {
-	if (cppsetup(exp, filep, file_red))
+	if ((cppsetup(exp, filep, file_red)))
 	    return(IFFALSE);
 	else
 	    return(IF);
@@ -408,7 +417,7 @@ define(def, file)
 
     /* Separate symbol name and its value */
     val = def;
-    while (isalnum(*val) || *val == '_')
+    while (isalnum((int)*val) || *val == '_')
 	val++;
     if (*val)
 	*val++ = '\0';
@@ -544,7 +553,7 @@ find_includes(filep, file, file_red, recursion, failOK)
 	register int	type;
 	boolean recfailOK;
 
-	while (line = our_getline(filep)) {
+	while ((line = our_getline(filep))) {
 		switch(type = deftype(line, filep, file_red, file, TRUE)) {
 		case IF:
 		doif:

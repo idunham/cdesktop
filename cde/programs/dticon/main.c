@@ -34,6 +34,7 @@
 /* at the appropriate places.                                */
 /*-----------------------------------------------------------*/
 #include <stdio.h>
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -363,7 +364,7 @@ main(
 static void
 ExitCB (Widget dialog, XtPointer client_data, XtPointer call_data)
 {
-    exit((int) client_data);
+    exit((int) (intptr_t) client_data);
 }
 
 void

@@ -81,7 +81,7 @@ extern Status _falmbGenericTextPerCharExtents(), _falwcGenericTextPerCharExtents
 extern int _falmbGenericDrawString(), _falwcGenericDrawString();
 extern void _falmbGenericDrawImageString(), _falwcGenericDrawImageString();
 
-extern dbg_printValue();
+extern void dbg_printValue(char *str, char **value, int num);
 
 /* For VW/UDC start */
 
@@ -1717,7 +1717,8 @@ int *vrotate_num;
     }
 }
 
-static read_vw(lcd,font_set,num)
+static void
+read_vw(lcd,font_set,num)
 XLCd    lcd;
 OMData  font_set;
 int num;

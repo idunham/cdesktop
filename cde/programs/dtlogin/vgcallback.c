@@ -794,7 +794,7 @@ MenuItemCB( Widget w, XtPointer client_data, XtPointer call_data )
 
     session_selected = True;
 
-    switch ( (int) client_data) {
+    switch ( (long) client_data) {
 
     case OB_RESTART_SERVER:
 	CleanupAndExit(NULL, NOTIFY_RESTART);
@@ -1242,6 +1242,8 @@ RequestCB(
                                       XmFONTLIST_DEFAULT_TAG));
               string = XmStringConcat(xmstr, XmStringSeparatorCreate());
             }
+
+            fclose(fp);
           }
           else
           {
@@ -1941,5 +1943,7 @@ TellRequester(char * buf, size_t nbytes)
 #ifdef VG_TRACE
   vg_TRACE_EXECUTION("main:  entered TellRequester ...");
 #endif /* VG_TRACE */
-  write(1, buf, nbytes);
+  if(-1 == write(1, buf, nbytes)) {
+    perror(strerror(errno));
+  }
 }

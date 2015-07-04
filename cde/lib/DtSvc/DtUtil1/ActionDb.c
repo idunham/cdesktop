@@ -43,6 +43,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#include <stdint.h>
 #include <string.h>
 #include <X11/Intrinsic.h>
 
@@ -1063,7 +1064,7 @@ _DtActionConverter(DtDtsDbField * fields,
 
 		if ((ThisBit = _DtActFieldBitLookup(XrmQuarkToString(fields[i].fieldName))) != 0)
 		{
-			switch ((int)(fieldVal=_DtActValidateFieldValue(ThisBit,
+			switch ((intptr_t)(fieldVal=_DtActValidateFieldValue(ThisBit,
                                 fields[i].fieldValue, fields[0].fieldValue,
                                 fileName)))
 			{

@@ -38,6 +38,7 @@ static char rcs_id[] = "$XConsortium: TermPrimBufferWc.c /main/1 1996/04/21 19:1
 
 #define	USE_MEMCPY	/* use memcpy for line movement... */
 
+#include <stdlib.h>
 #include <wchar.h>
 #include <Xm/Xm.h>
 #include "TermHeader.h"       /* for MIN/MAX */
@@ -299,7 +300,7 @@ _primBufferInsertWc
     short             overflowWidth;
     short             localCol;
     TermLine          line;
-    wchar_t          *pwc;
+    wchar_t          *pwc = NULL;
     TermCharInfoRec   charInfo;
 
     /*

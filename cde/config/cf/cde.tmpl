@@ -12,7 +12,7 @@ XCOMM $XConsortium: cde.tmpl /main/2 1996/12/04 10:13:09 swick $
 #endif
 
 #ifndef _CUseCat
-# if (defined(__STDC__) && !defined(UnixCpp)) || defined(AnsiCpp)
+# if (__STDC__ && !defined(UnixCpp)) || defined(AnsiCpp) || defined(__llvm__)
 #  if UseInstalledCDE
 #   define _CUseCat(a,b,c) a##c
 #  else
@@ -223,7 +223,7 @@ XCOMM $XConsortium: cde.tmpl /main/2 1996/12/04 10:13:09 swick $
 # if UseInstalledCDE
 #  define DtCodeGen dtcodegen
 # else
-#  define DtCodeGen $(CLIENTENVSETUP) $(CDESRC)/dtappbuilder/src/abmf/dtcodegen
+#  define DtCodeGen $(CLIENTENVSETUP) $(DTCODEGENCAT) $(CDESRC)/dtappbuilder/src/abmf/dtcodegen
 # endif
 #endif
 
@@ -232,12 +232,9 @@ XCOMM $XConsortium: cde.tmpl /main/2 1996/12/04 10:13:09 swick $
 #endif
 
 #ifndef UseNSGMLS
-# ifdef SunArchitecture
-#  define UseNSGMLS NO
-# else
-#  define UseNSGMLS YES
-# endif
+# define UseNSGMLS YES
 #endif
+
 #ifndef SGMLParser
 # if UseNSGMLS
 #  define SGMLDir $(NSGMLSSRC)

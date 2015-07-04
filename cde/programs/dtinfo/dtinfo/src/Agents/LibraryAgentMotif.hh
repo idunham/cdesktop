@@ -31,14 +31,13 @@
 #include <X11/Intrinsic.h>
 
 class OutlineListView;
-class OutlineListView;
 class WTopLevelShell;
 class ScopeMenu;
 class IcccmAgent;
 
 struct OutlineListSelectionData;
 
-class TrackingEntry;
+struct TrackingEntry;
 
 class LibraryAgent : public Agent,
 		     public UAS_Receiver<UAS_DocumentRetrievedMsg>

@@ -118,6 +118,21 @@ extern Time_t time ();
 extern ARRAY8Ptr	ChooseAuthentication ();
 extern int		SelectConnectionTypeIndex ();
 
+void query_respond (struct sockaddr *from, int fromlen, int length);
+void broadcast_respond (struct sockaddr *from, int fromlen, int length);
+void forward_respond (struct sockaddr *from, int fromlen, int length);
+void request_respond (struct sockaddr *from, int fromlen, int length);
+void send_willing (struct sockaddr *from, int fromlen, ARRAY8Ptr authenticationName, ARRAY8Ptr status);
+void send_unwilling (struct sockaddr *from, int fromlen, ARRAY8Ptr authenticationName, ARRAY8Ptr status);
+void send_accept (struct sockaddr *to, int tolen, CARD32 sessionID, ARRAY8Ptr authenticationName, ARRAY8Ptr authenticationData, ARRAY8Ptr authorizationName, ARRAY8Ptr authorizationData);
+void manage (struct sockaddr *from, int fromlen, int length);
+void send_decline (struct sockaddr *to, int tolen, ARRAY8Ptr authenticationName, ARRAY8Ptr authenticationData, ARRAY8Ptr status);
+void send_failed (struct sockaddr *from, int fromlen, char *name, CARD32 sessionID, char *reason);
+void send_refuse (struct sockaddr *from, int fromlen, CARD32 sessionID);
+void send_alive (struct sockaddr *from, int fromlen, int length);
+
+
+
 int	xdmcpFd = -1;
 int	chooserFd = -1;
 
@@ -126,7 +141,8 @@ int	WellKnownSocketsMax;
 
 #define pS(s)	((s) ? ((char *) (s)) : "empty string")
 
-void DestroyWellKnownSockets ()
+void
+DestroyWellKnownSockets (void)
 {
     if (xdmcpFd != -1)
     {
@@ -140,7 +156,8 @@ void DestroyWellKnownSockets ()
     }
 }
 
-AnyWellKnownSockets ()
+int
+AnyWellKnownSockets (void)
 {
     return xdmcpFd != -1 || chooserFd != -1;
 }
@@ -149,10 +166,7 @@ static XdmcpBuffer	buffer;
 
 /*ARGSUSED*/
 static int
-sendForward (connectionType, address, closure)
-    CARD16	connectionType;
-    ARRAY8Ptr	address;
-    char	*closure;
+sendForward (CARD16 connectionType, ARRAY8Ptr address, char *closure)
 {
 #ifdef AF_INET
     struct sockaddr_in	    in_addr;
@@ -185,7 +199,7 @@ sendForward (connectionType, address, closure)
     default:
 	return 0;
     }
-    XdmcpFlush (xdmcpFd, &buffer, addr, addrlen);
+    XdmcpFlush (xdmcpFd, &buffer, (XdmcpNetaddr)addr, addrlen);
     return 0;
 }
 
@@ -193,10 +207,7 @@ extern char *NetaddrAddress();
 extern char *NetaddrPort();
 
 static void
-ClientAddress (from, addr, port, type)
-    struct sockaddr *from;
-    ARRAY8Ptr	    addr, port;	/* return */
-    CARD16	    *type;	/* return */
+ClientAddress (struct sockaddr *from, ARRAY8Ptr addr, ARRAY8Ptr port, CARD16 *type)
 {
     int length, family;
     char *data;
@@ -216,11 +227,7 @@ ClientAddress (from, addr, port, type)
 }
 
 static void
-all_query_respond (from, fromlen, authenticationNames, type)
-    struct sockaddr	*from;
-    int			fromlen;
-    ARRAYofARRAY8Ptr	authenticationNames;
-    xdmOpCode		type;
+all_query_respond (struct sockaddr *from, int fromlen, ARRAYofARRAY8Ptr authenticationNames, xdmOpCode type)
 {
     ARRAY8Ptr	authenticationName;
     ARRAY8	status;
@@ -253,10 +260,7 @@ all_query_respond (from, fromlen, authenticationNames, type)
 }
 
 static void
-indirect_respond (from, fromlen, length)
-    struct sockaddr *from;
-    int		    fromlen;
-    int		    length;
+indirect_respond (struct sockaddr *from, int fromlen, int length)
 {
     ARRAYofARRAY8   queryAuthenticationNames;
     ARRAY8	    clientAddress;
@@ -308,7 +312,7 @@ indirect_respond (from, fromlen, length)
 }
 
 static void
-ProcessRequestSocket ()
+ProcessRequestSocket (void)
 {
     XdmcpHeader		header;
     struct sockaddr_in	addr;
@@ -316,7 +320,7 @@ ProcessRequestSocket ()
 
     Debug ("ProcessRequestSocket\n");
     bzero ((char *) &addr, sizeof (addr));
-    if (!XdmcpFill (xdmcpFd, &buffer, &addr, &addrlen)) {
+    if (!XdmcpFill (xdmcpFd, &buffer, (XdmcpNetaddr)&addr, &addrlen)) {
 	Debug ("XdmcpFill failed\n");
 	return;
     }
@@ -333,25 +337,25 @@ ProcessRequestSocket ()
     switch (header.opcode)
     {
     case BROADCAST_QUERY:
-	broadcast_respond (&addr, addrlen, header.length);
+      broadcast_respond ((struct sockaddr *)&addr, addrlen, header.length);
 	break;
     case QUERY:
-	query_respond (&addr, addrlen, header.length);
+	query_respond ((struct sockaddr *)&addr, addrlen, header.length);
 	break;
     case INDIRECT_QUERY:
-	indirect_respond (&addr, addrlen, header.length);
+	indirect_respond ((struct sockaddr *)&addr, addrlen, header.length);
 	break;
     case FORWARD_QUERY:
-	forward_respond (&addr, addrlen, header.length);
+	forward_respond ((struct sockaddr *)&addr, addrlen, header.length);
 	break;
     case REQUEST:
-	request_respond (&addr, addrlen, header.length);
+	request_respond ((struct sockaddr *)&addr, addrlen, header.length);
 	break;
     case MANAGE:
-	manage (&addr, addrlen, header.length);
+	manage ((struct sockaddr *)&addr, addrlen, header.length);
 	break;
     case KEEPALIVE:
-	send_alive (&addr, addrlen, header.length);
+	send_alive ((struct sockaddr *)&addr, addrlen, header.length);
 	break;
     }
 }
@@ -360,7 +364,7 @@ ProcessRequestSocket ()
  * dtlogin changes to WaitForSomething () merged in to support command line
  * login.
  */
-void WaitForSomething ()
+void WaitForSomething (void)
 {
     FD_TYPE	reads;
     struct timeval	timeout, *ptimeout;
@@ -411,9 +415,7 @@ void WaitForSomething ()
 static ARRAY8	Hostname;
 
 void
-registerHostname (name, namelen)
-    char    *name;
-    int	    namelen;
+registerHostname (char *name, int namelen)
 {
     int	i;
 
@@ -424,11 +426,7 @@ registerHostname (name, namelen)
 }
 
 static void
-direct_query_respond (from, fromlen, length, type)
-    struct sockaddr *from;
-    int		    fromlen;
-    int		    length;
-    xdmOpCode	    type;
+direct_query_respond (struct sockaddr *from, int fromlen, int length, xdmOpCode type)
 {
     ARRAYofARRAY8   queryAuthenticationNames;
     int		    expectedLen;
@@ -444,37 +442,26 @@ direct_query_respond (from, fromlen, length, type)
     XdmcpDisposeARRAYofARRAY8 (&queryAuthenticationNames);
 }
 
-query_respond (from, fromlen, length)
-    struct sockaddr *from;
-    int		    fromlen;
-    int		    length;
+void
+query_respond (struct sockaddr *from, int fromlen, int length)
 {
     Debug ("Query respond %d\n", length);
     direct_query_respond (from, fromlen, length, QUERY);
 }
 
-broadcast_respond (from, fromlen, length)
-    struct sockaddr *from;
-    int		    fromlen;
-    int		    length;
+void
+broadcast_respond (struct sockaddr *from, int fromlen, int length)
 {
     direct_query_respond (from, fromlen, length, BROADCAST_QUERY);
 }
 
 /* computes an X display name */
-
+#if NeedWidePrototypes
 char *
-NetworkAddressToName(connectionType, connectionAddress, displayNumber)
-#if NeedWidePrototypes
-    int connectionType;
+NetworkAddressToName(int connectionType, ARRAY8Ptr connectionAddress, int displayNumber)
 #else
-    CARD16 connectionType;
-#endif
-    ARRAY8Ptr   connectionAddress;
-#if NeedWidePrototypes
-    int displayNumber;
-#else
-    CARD16 displayNumber;
+char *
+NetworkAddressToName(CARD16 connectionType, ARRAY8Ptr connectionAddress, CARD16 displayNumber)
 #endif
 {
     switch (connectionType)
@@ -551,10 +538,8 @@ NetworkAddressToName(connectionType, connectionAddress, displayNumber)
 }
 
 /*ARGSUSED*/
-forward_respond (from, fromlen, length)
-    struct sockaddr	*from;
-    int			fromlen;
-    int			length;
+void
+forward_respond (struct sockaddr *from, int fromlen, int length)
 {
     ARRAY8	    clientAddress;
     ARRAY8	    clientPort;
@@ -597,7 +582,7 @@ forward_respond (from, fromlen, length)
 #ifdef AF_INET
 	    case AF_INET:
 		{
-		    struct sockaddr_in	in_addr;
+		    static struct sockaddr_in	in_addr;
 
 		    if (clientAddress.length != 4 ||
 		        clientPort.length != 2)
@@ -619,7 +604,7 @@ forward_respond (from, fromlen, length)
 #ifdef AF_UNIX
 	    case AF_UNIX:
 		{
-		    struct sockaddr_un	un_addr;
+		    static struct sockaddr_un	un_addr;
 
 		    if (clientAddress.length >= sizeof (un_addr.sun_path))
 			goto badAddress;
@@ -660,11 +645,8 @@ badAddress:
     XdmcpDisposeARRAYofARRAY8 (&authenticationNames);
 }
 
-send_willing (from, fromlen, authenticationName, status)
-    struct sockaddr *from;
-    int		    fromlen;
-    ARRAY8Ptr	    authenticationName;
-    ARRAY8Ptr	    status;
+void
+send_willing (struct sockaddr *from, int fromlen, ARRAY8Ptr authenticationName, ARRAY8Ptr status)
 {
     XdmcpHeader	header;
 
@@ -682,14 +664,11 @@ send_willing (from, fromlen, authenticationName, status)
     XdmcpWriteARRAY8 (&buffer, authenticationName);
     XdmcpWriteARRAY8 (&buffer, &Hostname);
     XdmcpWriteARRAY8 (&buffer, status);
-    XdmcpFlush (xdmcpFd, &buffer, from, fromlen);
+    XdmcpFlush (xdmcpFd, &buffer, (XdmcpNetaddr)from, fromlen);
 }
 
-send_unwilling (from, fromlen, authenticationName, status)
-    struct sockaddr *from;
-    int		    fromlen;
-    ARRAY8Ptr	    authenticationName;
-    ARRAY8Ptr	    status;
+void
+send_unwilling (struct sockaddr *from, int fromlen, ARRAY8Ptr authenticationName, ARRAY8Ptr status)
 {
     XdmcpHeader	header;
 
@@ -705,14 +684,15 @@ send_unwilling (from, fromlen, authenticationName, status)
     XdmcpWriteHeader (&buffer, &header);
     XdmcpWriteARRAY8 (&buffer, &Hostname);
     XdmcpWriteARRAY8 (&buffer, status);
-    XdmcpFlush (xdmcpFd, &buffer, from, fromlen);
+    XdmcpFlush (xdmcpFd, &buffer, (XdmcpNetaddr)from, fromlen);
 }
 
 static unsigned long	globalSessionID;
 
 #define NextSessionID()    (++globalSessionID)
 
-void init_session_id()
+void
+init_session_id(void)
 {
     /* Set randomly so we are unlikely to reuse id's from a previous
      * incarnation so we don't say "Alive" to those displays.
@@ -726,10 +706,8 @@ static ARRAY8 noValidAddr = { (CARD16) 16, (CARD8Ptr) "No valid address" };
 static ARRAY8 noValidAuth = { (CARD16) 22, (CARD8Ptr) "No valid authorization" };
 static ARRAY8 noAuthentic = { (CARD16) 29, (CARD8Ptr) "XDM has no authentication key" };
 
-request_respond (from, fromlen, length)
-    struct sockaddr *from;
-    int		    fromlen;
-    int		    length;
+void
+request_respond (struct sockaddr *from, int fromlen, int length)
 {
     CARD16	    displayNumber;
     ARRAY16	    connectionTypes;
@@ -875,14 +853,8 @@ abort:
     XdmcpDisposeARRAY8 (&manufacturerDisplayID);
 }
 
-send_accept (to, tolen, sessionID,
-	     authenticationName, authenticationData,
-	     authorizationName, authorizationData)
-    struct sockaddr *to;
-    int		    tolen;
-    CARD32	    sessionID;
-    ARRAY8Ptr	    authenticationName, authenticationData;
-    ARRAY8Ptr	    authorizationName, authorizationData;
+void
+send_accept (struct sockaddr *to, int tolen, CARD32 sessionID, ARRAY8Ptr authenticationName, ARRAY8Ptr authenticationData, ARRAY8Ptr authorizationName, ARRAY8Ptr authorizationData)
 {
     XdmcpHeader	header;
 
@@ -900,14 +872,11 @@ send_accept (to, tolen, sessionID,
     XdmcpWriteARRAY8 (&buffer, authenticationData);
     XdmcpWriteARRAY8 (&buffer, authorizationName);
     XdmcpWriteARRAY8 (&buffer, authorizationData);
-    XdmcpFlush (xdmcpFd, &buffer, to, tolen);
+    XdmcpFlush (xdmcpFd, &buffer, (XdmcpNetaddr)to, tolen);
 }
-   
-send_decline (to, tolen, authenticationName, authenticationData, status)
-    struct sockaddr *to;
-    int		    tolen;
-    ARRAY8Ptr	    authenticationName, authenticationData;
-    ARRAY8Ptr	    status;
+
+void
+send_decline (struct sockaddr *to, int tolen, ARRAY8Ptr authenticationName, ARRAY8Ptr authenticationData, ARRAY8Ptr status)
 {
     XdmcpHeader	header;
 
@@ -922,13 +891,11 @@ send_decline (to, tolen, authenticationName, authenticationData, status)
     XdmcpWriteARRAY8 (&buffer, status);
     XdmcpWriteARRAY8 (&buffer, authenticationName);
     XdmcpWriteARRAY8 (&buffer, authenticationData);
-    XdmcpFlush (xdmcpFd, &buffer, to, tolen);
+    XdmcpFlush (xdmcpFd, &buffer, (XdmcpNetaddr)to, tolen);
 }
 
-manage (from, fromlen, length)
-    struct sockaddr *from;
-    int		    fromlen;
-    int		    length;
+void
+manage (struct sockaddr *from, int fromlen, int length)
 {
     CARD32		sessionID;
     CARD16		displayNumber;
@@ -1079,20 +1046,15 @@ abort:
     if (class) free ((char*) class);
 }
 
-void SendFailed (d, reason)
-    struct display  *d;
-    char	    *reason;
+void
+SendFailed (struct display *d, char *reason)
 {
     Debug ("Display start failed, sending Failed\n");
     send_failed (d->from, d->fromlen, d->name, d->sessionID, reason);
 }
 
-send_failed (from, fromlen, name, sessionID, reason)
-    struct sockaddr *from;
-    int		    fromlen;
-    char	    *name;
-    CARD32	    sessionID;
-    char	    *reason;
+void
+send_failed (struct sockaddr *from, int fromlen, char *name, CARD32 sessionID, char *reason)
 {
     static char	buf[256];
     XdmcpHeader	header;
@@ -1109,13 +1071,11 @@ send_failed (from, fromlen, name, sessionID, reason)
     XdmcpWriteHeader (&buffer, &header);
     XdmcpWriteCARD32 (&buffer, sessionID);
     XdmcpWriteARRAY8 (&buffer, &status);
-    XdmcpFlush (xdmcpFd, &buffer, from, fromlen);
+    XdmcpFlush (xdmcpFd, &buffer, (XdmcpNetaddr)from, fromlen);
 }
 
-send_refuse (from, fromlen, sessionID)
-    struct sockaddr *from;
-    int		    fromlen;
-    CARD32	    sessionID;
+void
+send_refuse (struct sockaddr *from, int fromlen, CARD32 sessionID)
 {
     XdmcpHeader	header;
 
@@ -1125,13 +1085,11 @@ send_refuse (from, fromlen, sessionID)
     header.length = 4;
     XdmcpWriteHeader (&buffer, &header);
     XdmcpWriteCARD32 (&buffer, sessionID);
-    XdmcpFlush (xdmcpFd, &buffer, from, fromlen);
+    XdmcpFlush (xdmcpFd, &buffer, (XdmcpNetaddr)from, fromlen);
 }
 
-send_alive (from, fromlen, length)
-    struct sockaddr *from;
-    int		    fromlen;
-    int		    length;
+void
+send_alive (struct sockaddr *from, int fromlen, int length)
 {
     CARD32		sessionID;
     CARD16		displayNumber;
@@ -1165,19 +1123,18 @@ send_alive (from, fromlen, length)
 	    XdmcpWriteHeader (&buffer, &header);
 	    XdmcpWriteCARD8 (&buffer, sendRunning);
 	    XdmcpWriteCARD32 (&buffer, sendSessionID);
-	    XdmcpFlush (xdmcpFd, &buffer, from, fromlen);
+	    XdmcpFlush (xdmcpFd, &buffer, (XdmcpNetaddr)from, fromlen);
 	}
     }
 }
 
-char *
-NetworkAddressToHostname (connectionType, connectionAddress)
 #if NeedWidePrototypes
-    int connectionType;
+char *
+NetworkAddressToHostname (int connectionType, ARRAY8Ptr connectionAddress)
 #else
-    CARD16 connectionType;
+char *
+NetworkAddressToHostname (CARD16 connectionType, ARRAY8Ptr connectionAddress)
 #endif
-    ARRAY8Ptr   connectionAddress;
 {
     char    *name = 0;
 
@@ -1221,11 +1178,8 @@ NetworkAddressToHostname (connectionType, connectionAddress)
     return name;
 }
 
-static
-HostnameToNetworkAddress (name, connectionType, connectionAddress)
-char	    *name;
-CARD16	    connectionType;
-ARRAY8Ptr   connectionAddress;
+static int
+HostnameToNetworkAddress (char *name, CARD16 connectionType, ARRAY8Ptr connectionAddress)
 {
     switch (connectionType)
     {
@@ -1254,12 +1208,8 @@ ARRAY8Ptr   connectionAddress;
  * the same rules as XOpenDisplay (algorithm cribbed from there)
  */
 
-static
-NameToNetworkAddress(name, connectionTypep, connectionAddress, displayNumber)
-char	    *name;
-CARD16Ptr   connectionTypep;
-ARRAY8Ptr   connectionAddress;
-CARD16Ptr   displayNumber;
+static int
+NameToNetworkAddress(char *name, CARD16Ptr connectionTypep, ARRAY8Ptr connectionAddress, CARD16Ptr displayNumber)
 {
     char    *colon, *display_number;
     char    hostname[1024];
@@ -1311,3 +1261,4 @@ CARD16Ptr   displayNumber;
     *connectionTypep = connectionType;
     return TRUE;
 }
+

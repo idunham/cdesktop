@@ -187,7 +187,7 @@ Account( struct display *d, char *user, char *line, pid_t pid,
 #else
     bzero(&utmp, sizeof(struct utmp));
 
-    strncpy(utmp.ut_id, d->utmpId, sizeof(u->ut_id));
+    strncpy(utmp.ut_id, d->utmpId, sizeof(u->ut_id) - 1);
     utmp.ut_type = LOGIN_PROCESS;
     
     setutent();
@@ -291,7 +291,9 @@ Account( struct display *d, char *user, char *line, pid_t pid,
      */
 
     if ((fd = open(WTMP_FILE, O_WRONLY | O_APPEND)) >= 0) {
-	write(fd, u, sizeof(utmp));
+	if(-1 == write(fd, u, sizeof(utmp))) {
+          perror(strerror(errno));
+        }
 	close(fd);
     }
 

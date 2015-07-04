@@ -37,6 +37,7 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <stdint.h>
 
 #ifdef NLS16
 #include <limits.h>
@@ -731,5 +732,5 @@ _DtActionCompareRecordBoson(
 	if (results)
 		return(results);
 
-	return((int)record1 - (int)record2);
+	return((intptr_t)record1 - (intptr_t)record2);
 }

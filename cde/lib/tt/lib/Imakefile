@@ -45,8 +45,10 @@ INCLUDES = -I.
 
 #ifdef SharedTtReqs
 #ifdef SunArchitecture
-REQUIREDLIBS = SharedTtReqs -lC -lCrun
+REQUIREDLIBS = SharedTtReqs
+#ifndef HasGcc2
 SHLIBLDFLAGS = -G
+#endif
 #else
 REQUIREDLIBS = SharedTtReqs
 #endif
@@ -211,4 +213,6 @@ OBJS = $(OBJS_1) $(OBJS_2) $(OBJS_3)
 
 #include <Library.tmpl>
 
+#if defined(RsArchitecture) || defined(AlphaArchitecture)
 DependTarget()
+#endif

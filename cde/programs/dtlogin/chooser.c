@@ -160,6 +160,8 @@ static struct _app_resources {
     int		connectionType;
 } app_resources;
 
+static int FromHex (char *s, char *d, int len);
+
 #define offset(field) XtOffsetOf(struct _app_resources, field)
 
 #define XtRARRAY8   "ARRAY8"
@@ -213,18 +215,16 @@ static XdmcpBuffer	buffer;
 
 /* ARGSUSED */
 static void
-PingHosts (closure, id)
-    XtPointer closure;
-    XtIntervalId *id;
+PingHosts (XtPointer closure, XtIntervalId *id)
 {
     HostAddr	*hosts;
 
     for (hosts = hostAddrdb; hosts; hosts = hosts->next)
     {
 	if (hosts->type == QUERY)
-	    XdmcpFlush (socketFD, &directBuffer, hosts->addr, hosts->addrlen);
+	    XdmcpFlush (socketFD, &directBuffer, (XdmcpNetaddr) hosts->addr, hosts->addrlen);
 	else
-	    XdmcpFlush (socketFD, &broadcastBuffer, hosts->addr, hosts->addrlen);
+	    XdmcpFlush (socketFD, &broadcastBuffer, (XdmcpNetaddr) hosts->addr, hosts->addrlen);
     }
     if (++pingTry < TRIES)
 	XtAddTimeOut (PING_INTERVAL, PingHosts, (XtPointer) 0);
@@ -233,19 +233,19 @@ PingHosts (closure, id)
 char	**NameTable;
 int	NameTableSize;
 
-static int
-HostnameCompare (a, b)
 #if defined(__STDC__)
-    const void *a, *b;
+static int
+HostnameCompare (const void *a, const void *b)
 #else
-    char *a, *b;
+static int
+HostnameCompare (char *a, char *b)
 #endif
 {
     return strcmp (*(char **)a, *(char **)b);
 }
 
 static void
-RebuildTable (size)
+RebuildTable (int size)
 {
     char	**newTable = 0;
     HostName	*names;
@@ -296,8 +296,7 @@ RebuildTable (size)
 }
 
 static void
-RebuildTableAdd (size)
-	int size;
+RebuildTableAdd (int size)
 {
     char        **newTable = 0;
     HostName    *names;
@@ -336,10 +335,7 @@ RebuildTableAdd (size)
 
 
 static int
-AddHostname (hostname, status, addr, willing)
-    ARRAY8Ptr	    hostname, status;
-    struct sockaddr *addr;
-    int		    willing;
+AddHostname (ARRAY8Ptr hostname, ARRAY8Ptr status, struct sockaddr *addr, int willing)
 {
     HostName	*new, **names, *name;
     ARRAY8	hostAddr;
@@ -401,7 +397,6 @@ AddHostname (hostname, status, addr, willing)
 	}
     	if (!XdmcpAllocARRAY8 (&new->hostaddr, hostAddr.length))
     	{
-	    free ((char *) new->fullname);
 	    free ((char *) new);
 	    return 0;
     	}
@@ -445,9 +440,8 @@ AddHostname (hostname, status, addr, willing)
     return 1;
 }
 
-static
-DisposeHostname (host)
-    HostName	*host;
+static void
+DisposeHostname (HostName *host)
 {
     XdmcpDisposeARRAY8 (&host->hostname);
     XdmcpDisposeARRAY8 (&host->hostaddr);
@@ -456,9 +450,8 @@ DisposeHostname (host)
     free ((char *) host);
 }
 
-static
-RemoveHostname (host)
-    HostName	*host;
+static int
+RemoveHostname (HostName *host)
 {
     HostName	**prev, *hosts;
 
@@ -470,15 +463,17 @@ RemoveHostname (host)
 	prev = &hosts->next;
     }
     if (!hosts)
-	return;
+	return 0;
     *prev = host->next;
     DisposeHostname (host);
     NameTableSize--;
     RebuildTable (NameTableSize);
+
+    return 1;
 }
 
-static
-EmptyHostnames ()
+static void
+EmptyHostnames (void)
 {
     HostName	*hosts, *next;
 
@@ -494,10 +489,7 @@ EmptyHostnames ()
 
 /* ARGSUSED */
 static void
-ReceivePacket (closure, source, id)
-    XtPointer	closure;
-    int		*source;
-    XtInputId	*id;
+ReceivePacket (XtPointer closure, int *source, XtInputId *id)
 {
     XdmcpHeader	    header;
     ARRAY8	    authenticationName;
@@ -508,7 +500,7 @@ ReceivePacket (closure, source, id)
     int		    addrlen;
 
     addrlen = sizeof (addr);
-    if (!XdmcpFill (socketFD, &buffer, &addr, &addrlen))
+    if (!XdmcpFill (socketFD, &buffer, (XdmcpNetaddr) &addr, &addrlen))
 	return;
     if (!XdmcpReadHeader (&buffer, &header))
 	return;
@@ -554,21 +546,19 @@ ReceivePacket (closure, source, id)
     }
 }
 
-RegisterHostaddr (addr, len, type)
-    struct sockaddr *addr;
-    int		    len;
-    xdmOpCode	    type;
+int
+RegisterHostaddr (struct sockaddr *addr, int len, xdmOpCode type)
 {
     HostAddr		*host, **prev;
 
     host = (HostAddr *) malloc (sizeof (HostAddr));
     if (!host)
-	return;
+	return 0;
     host->addr = (struct sockaddr *) malloc (len);
     if (!host->addr)
     {
 	free ((char *) host);
-	return;
+	return 0;
     }
     memmove( (char *) host->addr, (char *) addr, len);
     host->addrlen = len;
@@ -577,6 +567,7 @@ RegisterHostaddr (addr, len, type)
 	;
     *prev = host;
     host->next = NULL;
+    return 1;
 }
 
 /*
@@ -585,9 +576,8 @@ RegisterHostaddr (addr, len, type)
  * The special name "BROADCAST" looks up all the broadcast
  *  addresses on the local host.
  */
-
-RegisterHostname (name)
-    char    *name;
+int
+RegisterHostname (char *name)
 {
     struct hostent	*hostent;
     struct sockaddr_in	in_addr;
@@ -602,7 +592,7 @@ RegisterHostname (name)
 	ifc.ifc_len = sizeof (buf);
 	ifc.ifc_buf = buf;
 	if (ioctl (socketFD, (int) SIOCGIFCONF, (char *) &ifc) < 0)
-	    return;
+	    return 0;
 	for (ifr = ifc.ifc_req
 #if defined (__bsdi__) || defined(__NetBSD__)
 	     ; (char *)ifr < ifc.ifc_buf + ifc.ifc_len;
@@ -665,9 +655,9 @@ RegisterHostname (name)
 	{
 	    hostent = gethostbyname (name);
 	    if (!hostent)
-		return;
+		return 0;
 	    if (hostent->h_addrtype != AF_INET || hostent->h_length != 4)
-	    	return;
+		return 0;
 	    in_addr.sin_family = hostent->h_addrtype;
 	    memmove( &in_addr.sin_addr, hostent->h_addr, 4);
 	}
@@ -678,26 +668,28 @@ RegisterHostname (name)
 	RegisterHostaddr ((struct sockaddr *)&in_addr, sizeof (in_addr),
 			  QUERY);
     }
+    return 1;
 }
 
 static ARRAYofARRAY8	AuthenticationNames;
 
-RegisterAuthenticationName (name, namelen)
-    char    *name;
-    int	    namelen;
+static int
+RegisterAuthenticationName (char *name, int namelen)
 {
     ARRAY8Ptr	authName;
     if (!XdmcpReallocARRAYofARRAY8 (&AuthenticationNames,
 				    AuthenticationNames.length + 1))
-	return;
+	return 0;
     authName = &AuthenticationNames.data[AuthenticationNames.length-1];
     if (!XdmcpAllocARRAY8 (authName, namelen))
-	return;
+	return 0;
     memmove( authName->data, name, namelen);
+
+    return 1;
 }
 
-InitXDMCP (argv)
-    char    **argv;
+int
+InitXDMCP (char **argv)
 {
     int	soopts = 1;
     XdmcpHeader	header;
@@ -740,8 +732,7 @@ InitXDMCP (argv)
 }
 
 void
-Choose (h)
-    HostName	*h;
+Choose (HostName *h)
 {
     if (app_resources.xdmAddress)
     {
@@ -767,6 +758,9 @@ Choose (h)
 	    addr = (struct sockaddr *) &in_addr;
 	    len = sizeof (in_addr);
 	    break;
+        default:
+	    fprintf (stderr, "Unhandled protocol family %d\n", family);
+	    exit (REMANAGE_DISPLAY);
 	}
 	if ((fd = socket (family, SOCK_STREAM, 0)) == -1)
 	{
@@ -785,7 +779,9 @@ Choose (h)
 	XdmcpWriteARRAY8 (&buffer, app_resources.clientAddress);
 	XdmcpWriteCARD16 (&buffer, (CARD16) app_resources.connectionType);
 	XdmcpWriteARRAY8 (&buffer, &h->hostaddr);
-	write (fd, (char *)buffer.data, buffer.pointer);
+	if(-1 == write (fd, (char *)buffer.data, buffer.pointer)) {
+            perror(strerror(errno));
+        }
 	close (fd);
     }
     else
@@ -801,11 +797,7 @@ Choose (h)
 
 /* ARGSUSED */
 void
-DoAccept (w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+DoAccept (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     HostName		*h;
     XmStringTable	selectedItem;
@@ -846,11 +838,7 @@ DoAccept (w, event, params, num_params)
 
 /* ARGSUSED */
 static void
-DoCheckWilling (w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+DoCheckWilling (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     HostName		*h;
     XmStringTable       selectedItem;
@@ -889,22 +877,14 @@ DoCheckWilling (w, event, params, num_params)
 
 /* ARGSUSED */
 void
-DoCancel (w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+DoCancel (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     exit (OBEYSESS_DISPLAY);
 }
 
 /* ARGSUSED */
 void
-DoPing (w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+DoPing (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     EmptyHostnames ();
     pingTry = 0;
@@ -918,8 +898,8 @@ static XtActionsRec app_actions[] = {
     "Ping",	    DoPing,
 };
 
-main (argc, argv)
-    char    **argv;
+int
+main (int argc, char **argv)
 {
     Arg		position[3];
     Dimension   width, height;
@@ -1018,17 +998,15 @@ XtPopup(login_shell, XtGrabNone);
 #endif
     InitXDMCP (argv + 1);
     XtMainLoop ();
-    exit(0);
-    /*NOTREACHED*/
+
+    return 0;
 }
 
 /* Converts the hex string s of length len into the byte array d.
    Returns 0 if s was a legal hex string, 1 otherwise.
    */
-int
-FromHex (s, d, len)
-    char    *s, *d;
-    int	    len;
+static int
+FromHex (char *s, char *d, int len)
 {
     int	t;
     int ret = len&1;		/* odd-length hex strings are illegal */
@@ -1052,11 +1030,7 @@ FromHex (s, d, len)
 
 /*ARGSUSED*/
 static void
-CvtStringToARRAY8 (args, num_args, fromVal, toVal)
-    XrmValuePtr	args;
-    Cardinal	*num_args;
-    XrmValuePtr	fromVal;
-    XrmValuePtr	toVal;
+CvtStringToARRAY8 (XrmValuePtr args, Cardinal *num_args, XrmValuePtr fromVal, XrmValuePtr toVal)
 {
     static ARRAY8Ptr	dest;
     char	*s;

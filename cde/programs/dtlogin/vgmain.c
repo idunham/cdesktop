@@ -2106,7 +2106,7 @@ MyBackspace( Widget w, XEvent *event, char **params, Cardinal *num_params )
 static int 
 ErrorHandler( Display *dpy, XErrorEvent *event )
 {
-    return;
+    return 0;
 }
 
 
@@ -2177,7 +2177,9 @@ static SIGVAL
 Terminate( int arg )
 
 {
-    write(1, "terminate", 9);
+    if(-1 == write(1, "terminate", 9)) {
+        perror(strerror(errno));
+    }
     CleanupAndExit(NULL, NOTIFY_ABORT);
 }
 

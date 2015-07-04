@@ -93,9 +93,7 @@ static char * makeEnv(
 static SIGVAL MakeLangAbort(
 			int arg	);
 			
-static int MatchesFileSuffix(
-			char * filename,
-			char * suffix );
+static int MatchesFileSuffix(const char *filename, const char *suffix);
 
 static void   ScanNLSDir(
 			char * dirname );
@@ -676,23 +674,22 @@ MakeLangList( void )
 
 
 static int
-MatchesFileSuffix(char *filename, char *suffix)
+MatchesFileSuffix(const char *filename, const char *suffix)
 {
     int		retval = 0;
 #if defined(_AIX) || defined(SVR4) || defined (__osf__) || defined(linux) || \
 	defined(CSRG_BASED)
-    char	*pch;
+    int		different = 1;
 	     
     /*
      * The assumption here is that the use of strrstr is
      * to determine if "dp->d_name" ends in ".cat".
      */
-    pch = filename;
-    if ((int) strlen(filename) >= (int) strlen(suffix))
-      pch = (char *)
-	    strcmp(filename + (strlen(filename) - strlen (suffix)), suffix);
+    if (strlen(filename) >= strlen(suffix)) {
+      different = strcmp(filename + (strlen(filename) - strlen (suffix)), suffix);
+    }
 
-    return (pch == NULL);
+    return (different == 0);
 #else
     return (strrstr(filename, suffix) != NULL);
 #endif
@@ -953,48 +950,6 @@ ScanNLSDir(char *dirname)
     free(str);
 }
 #endif /* __osf__obsoleted__ */
-
-#elif defined(sun)
-/*
- * Scan for installed locales on Sun platform.
- */
-{
-    DIR *dirp;
-    struct dirent *dp;
-    char* filename; 
-    char path1[MAXPATHLEN], path2[MAXPATHLEN];
-    struct stat stat1, stat2;
-    int retval1, retval2;
-
-    /* 
-     * To determin the fully installed locale list, check several locations.
-     */
-    if((dirp = opendir(DEF_X11_NLS_SHARE_DIR)) != NULL)
-    {
-        while((dp = readdir(dirp)) != NULL)
-	{
-	    filename = dp->d_name;
-
-	    if  ( filename[0] != '.' &&
-                 (int)(strlen(languageList) +
-		       strlen(filename) + 2) < LANGLISTSIZE)
-	    {
-		(void) sprintf(path1, "%s/%s", DEF_X11_NLS_LIB_DIR, filename);
-		(void) sprintf(path2, "%s/%s", dirname, filename);
-	        retval1 = stat(path1, &stat1);
-	        retval2 = stat(path2, &stat2);
-
-	    	if ( retval1==0 && retval2==0 &&
-		     S_ISDIR(stat1.st_mode) && S_ISDIR(stat2.st_mode) )
-		{
-		    strcat(languageList, " ");
-		    strcat(languageList, filename);
-		}
-            }
-        }
-        closedir(dirp);
-    }
-}
 
 #elif defined(__uxp__) || defined(USL)
 

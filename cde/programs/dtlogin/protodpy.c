@@ -152,7 +152,7 @@ DisposeProtoDisplay( struct protoDisplay *pdpy )
 	prev = p;
     }
     if (!p)
-	return;
+	return 0;
     if (prev)
 	prev->next = pdpy->next;
     else
@@ -164,4 +164,6 @@ DisposeProtoDisplay( struct protoDisplay *pdpy )
 	XauDisposeAuth (pdpy->xdmcpAuthorization);
     free ((char *) pdpy->address);
     free ((char *) pdpy);
+
+    return 1;
 }

@@ -48,6 +48,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <ctype.h>
 #include <sys/mman.h>
 #include <stdio.h>
@@ -654,7 +655,7 @@ get_link_info(type_info_t *info)
 		while((n = readlink(name, buff, MAXPATHLEN)) > 0)
 		{
 	
-			buff[n] = 0;
+			buff[n - 1] = 0;
 			free((void *)name);
 			name = strdup(buff);
 		}
@@ -1197,7 +1198,7 @@ type_path(const char *path, char *attr)
 	char	*c;
 	int	match = 0;
 
-	if(path && (int)path != -1)
+	if(path && (intptr_t)path != -1)
 	{
 #ifdef USE_FNMATCH
 		match = !fnmatch(attr, path, 0);

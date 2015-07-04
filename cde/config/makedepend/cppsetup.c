@@ -161,7 +161,7 @@ my_if_errors (ip, cp, expecting)
     int prefixlen;
     int i;
 
-    sprintf (prefix, "\"%s\":%d", filename, lineno);
+    snprintf (prefix, 300, "\"%s\":%d", filename, lineno);
     prefixlen = strlen(prefix);
     fprintf (stderr, "%s:  %s", prefix, pd->line);
     i = cp - pd->line;
@@ -216,6 +216,7 @@ my_eval_variable (ip, var, len)
     const char *var;
     int len;
 {
+    long val;
     struct symtab **s;
 
     s = lookup_variable (ip, var, len);
@@ -223,16 +224,18 @@ my_eval_variable (ip, var, len)
 	return 0;
     do {
 	var = (*s)->s_value;
-	if (!isvarfirstletter(*var))
+	if (!isvarfirstletter((int)*var) || !strcmp((*s)->s_name, var))
 	    break;
 	s = lookup_variable (ip, var, strlen(var));
     } while (s);
 
-    return strtol(var, NULL, 0);
+    var = ParseIfExpression(ip, var, &val);
+    if (var && *var) debug(4, ("extraneous: '%s'\n", var));
+    return val;
 }
 
 
-cppsetup(line, filep, inc)
+int cppsetup(line, filep, inc)
 	register char	*line;
 	register struct filepointer	*filep;
 	register struct inclist		*inc;

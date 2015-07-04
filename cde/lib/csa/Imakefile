@@ -24,8 +24,10 @@ REQUIREDLIBS = SharedCsaReqs
 #endif
 
 #ifdef SunArchitecture
-  EXTRA_DEFINES = -xstrconst -v -DSunOS=$(OSMAJORVERSION)$(OSMINORVERSION)
+  EXTRA_DEFINES = -v -DSunOS=$(OSMAJORVERSION)$(OSMINORVERSION)
+#ifndef HasGcc2
   SHLIBLDFLAGS = -G -z text -z defs
+#endif
 #endif
 
 #ifdef HPArchitecture
@@ -53,7 +55,7 @@ SRCS =	agent.c		agent_xdr.c	api.c \
 	entry.c		free.c		hash.c \
 	iso8601.c	laccess.c	lutil.c \
 	match.c		nametbl.c	refree.c \
-	reparser.y	rescan.c	rpccalls.c \
+	reparser.c	rescan.c	rpccalls.c \
 	rtable2_clnt.c	rtable2_xdr.c	rtable3_clnt.c \
 	rtable3_xdr.c	rtable4_clnt.c	rtable4_xdr.c \
 	table.c		updateattrs.c	xtclient.c \
@@ -105,12 +107,14 @@ rtable3_clnt.c rtable3_xdr.c: rtable3.h namechange1.sed namechange2.sed
 rtable2_clnt.c rtable2_xdr.c: rtable3.h namechange1.sed namechange2.sed
 agent_xdr.c agent.c: agent.h
 
+#define RPCGEN rpcgen -h agent.x | $(EXTRASED) \			@@\
+	  $(SED) -f namechange1.sed | \					@@\
+	  $(SED) -f namechange2.sed >> agent.h
+
 agent.h:
 	$(RM) $@
 	cat agent.wrapbegin > agent.h
-	rpcgen -h agent.x | $(EXTRASED) \
-	  sed -f namechange1.sed | \
-	  sed -f namechange2.sed >> agent.h
+	RPCGEN
 	cat agent.wrapend >> agent.h
 
 .SUFFIXES: .x

@@ -40,6 +40,7 @@
 #include <Dt/Wsm.h>
 #include <Dt/HelpDialog.h>
 
+#include <stdint.h>
 #include "calctool.h"
 #include "motif.h"
 
@@ -154,9 +155,9 @@ void
 HelpRequestCB(Widget widget, caddr_t client_data, caddr_t call_data)
 {
   char  *helpVolume, *locationId;
-  int   topic;
+  intptr_t   topic;
 
-  topic = ((int) client_data) & 0xFFFF;
+  topic = ((intptr_t) client_data) & 0xFFFF;
   helpVolume = HELP_VOLUME;
 
   if(topic < 56)

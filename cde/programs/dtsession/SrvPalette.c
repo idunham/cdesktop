@@ -665,7 +665,7 @@ convert_pixel_set(
   int i;
   char *converted;
   char *p;
-  int colormappingindex;
+  int colormappingindex = 0;
 
   const int colormapping [4][XmCO_MAX_NUM_COLORS] = {
     {0, 1, 2, 3, 4, 5, 6, 7}, /* XmCO_HIGH_COLOR */
@@ -726,7 +726,7 @@ convert_selection(
         int *format )
 {
   char pixels[50];
-  int i, screen_number;
+  int i, screen_number = 0;
   char *temp;
   char *str_type_return;
   XrmValue value_return;

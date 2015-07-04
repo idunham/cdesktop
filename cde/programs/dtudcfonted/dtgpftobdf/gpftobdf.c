@@ -116,12 +116,12 @@ static	void	pfixCHARS();
 static	int 	getarg();
 
 static	Bool	seekToType() ;
-static	int	getMetric() ;
+static	void	getMetric() ;
 static	Bool	getAccel() ;
 static	Bool	getProperties() ;
-static	int	putPtn() ;
-static	int	ByteSwap() ;
-static	int	invertBits() ;
+static	void	putPtn() ;
+static	void	ByteSwap() ;
+static	void	invertBits() ;
 
 static	int	getINT16() ;
 static	int	getINT32() ;
@@ -483,7 +483,7 @@ CARD32	*offsetp;
 }
 
 
-static
+static void
 getMetric( buf, format, metric )
 caddr_t 	buf;
 CARD32	format;
@@ -1197,7 +1197,7 @@ unsigned int	glyphPad;
 }
 
 
-static	
+static void
 putPtn( bits, width, height)
 unsigned char   *bits;          /* 1 byte boundary , no byte swap data */
 int     width, height;
@@ -1216,7 +1216,7 @@ int     width, height;
 
 }
 
-static
+static void
 ByteSwap( p, scan)
 char    *p;
 int     scan;
@@ -1288,7 +1288,7 @@ register int nbytes;
 		*buf = rev[*buf];
 }
 
-static
+static void
 invertBits( src, format, width, height, dest)
 char    *src;
 CARD32  format;

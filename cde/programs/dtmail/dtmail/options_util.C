@@ -23,6 +23,7 @@
 /* $TOG: options_util.C /main/8 1999/07/07 13:20:04 mgreess $ */
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <X11/Intrinsic.h>
 #include <Xm/DialogS.h>
 #include <Xm/Form.h>
@@ -101,7 +102,7 @@ options_radiobox_init(
 	XtAddCallback(items[i], XmNvalueChangedCallback, 
 			options_setting_chgCB, (XtPointer)dirty_bit);
 	XtAddCallback(items[i], XmNvalueChangedCallback, 
-			options_radiobox_itemCB, (XtPointer)item_values[i]);
+			options_radiobox_itemCB, (XtPointer) (intptr_t) item_values[i]);
 
 	/* Ensure Radiobox has a default Value set */
 	if (i == 0)

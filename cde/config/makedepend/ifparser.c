@@ -81,6 +81,8 @@
 
 #include "ifparser.h"
 #include <ctype.h>
+#include <string.h>
+#include <limits.h>
 
 /****************************************************************************
 		   Internal Macros and Utilities for Parser
@@ -88,8 +90,8 @@
 
 #define DO(val) if (!(val)) return NULL
 #define CALLFUNC(ggg,fff) (*((ggg)->funcs.fff))
-#define SKIPSPACE(ccc) while (isspace(*ccc)) ccc++
-#define isvarfirstletter(ccc) (isalpha(ccc) || (ccc) == '_')
+#define SKIPSPACE(ccc) while (isspace((int)*ccc)) ccc++
+#define isvarfirstletter(ccc) (isalpha((int)ccc) || (ccc) == '_')
 
 
 static const char *
@@ -105,7 +107,7 @@ parse_variable (g, cp, varp)
 
     *varp = cp;
     /* EMPTY */
-    for (cp++; isalnum(*cp) || *cp == '_'; cp++) ;
+    for (cp++; isalnum((int)*cp) || *cp == '_'; cp++) ;
     return cp;
 }
 
@@ -116,19 +118,48 @@ parse_number (g, cp, valp)
     const char *cp;
     long *valp;
 {
+    long base = 10;
     SKIPSPACE (cp);
 
-    if (!isdigit(*cp))
+    if (!isdigit((int)*cp))
 	return CALLFUNC(g, handle_error) (g, cp, "number");
 
-    *valp = strtol(cp, &cp, 0);
-    /* skip trailing qualifiers */
+    *valp = 0;
+
+    if (*cp == '0') {
+	cp++;
+	if ((*cp == 'x') || (*cp == 'X')) {
+	    base = 16;
+	    cp++;
+	} else {
+	    base = 8;
+	}
+    }
+
+    /* Ignore overflows and assume ASCII, what source is usually written in */
+    while (1) {
+	int increment = -1;
+	if (base == 8) {
+	    if ((*cp >= '0') && (*cp <= '7'))
+		increment = *cp++ - '0';
+	} else if (base == 16) {
+	    if ((*cp >= '0') && (*cp <= '9'))
+		increment = *cp++ - '0';
+	    else if ((*cp >= 'A') &&  (*cp <= 'F'))
+		increment = *cp++ - ('A' - 10);
+	    else if ((*cp >= 'a') && (*cp <= 'f'))
+		increment = *cp++ - ('a' - 10);
+	} else {	/* Decimal */
+	    if ((*cp >= '0') && (*cp <= '9'))
+		increment = *cp++ - '0';
+	}
+	if (increment < 0)
+	    break;
+	*valp = (*valp * base) + increment;
+    }
+
+    /* Skip trailing qualifiers */
     while (*cp == 'U' || *cp == 'u' || *cp == 'L' || *cp == 'l') cp++;
-#if 0
-    *valp = atoi (cp);
-    /* EMPTY */
-    for (cp++; isdigit(*cp); cp++) ;
-#endif
     return cp;
 }
 
@@ -218,7 +249,7 @@ parse_value (g, cp, valp)
 	return cp + 1;
 
       case 'd':
-	if (strncmp (cp, "defined", 7) == 0 && !isalnum(cp[7])) {
+	if (strncmp (cp, "defined", 7) == 0 && !isalnum((int)cp[7])) {
 	    int paren = 0;
 	    int len;
 
@@ -239,7 +270,7 @@ parse_value (g, cp, valp)
 	/* fall out */
     }
 
-    if (isdigit(*cp)) {
+    if (isdigit((int)*cp)) {
 	DO (cp = parse_number (g, cp, valp));
     } else if (!isvarfirstletter(*cp))
 	return CALLFUNC(g, handle_error) (g, cp, "variable or number");
@@ -272,7 +303,10 @@ parse_product (g, cp, valp)
 
       case '/':
 	DO (cp = parse_product (g, cp + 1, &rightval));
-	*valp = (*valp / rightval);
+	if (rightval)
+	    *valp = (*valp / rightval);
+	else
+	    *valp = LONG_MAX;
 	break;
 
       case '%':

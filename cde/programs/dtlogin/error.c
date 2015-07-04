@@ -171,7 +171,8 @@ void
 TrimErrorFile( void )
 {
 
-    int  f1, f2;
+    int  f1 = -1;
+    int  f2 = -1;
     int  deleteBytes;
     
     char buf[BUFSIZ];
@@ -213,6 +214,12 @@ TrimErrorFile( void )
 	     (f2 = open(errorLogFile, O_RDWR)) < 0    ) {
 	    Debug("TrimErrorLog(): Cannot open file %s, error number = %d\n",
 	    	   errorLogFile, errno);
+	    if(f1 >= 0) {
+       	        close(f1);
+            }
+	    if(f2 >= 0) {
+                close(f2);
+            }
 	    return;
 	}
 	    		    
@@ -225,10 +232,13 @@ TrimErrorFile( void )
 	if ( (status = lseek(f2, deleteBytes, SEEK_SET)) < 0 ) {
 	    Debug("TrimErrorLog(): Cannot lseek() in file %s, error number = %d\n",
 	    	   errorLogFile, errno);
+	    close(f1);
+	    close(f2);
 	    return;
 	}
 
-	n = read(f2, buf, BUFSIZ);
+        memset(buf, 0, BUFSIZ);
+	n = read(f2, buf, BUFSIZ - 1);
 
 	if ( (p = strchr(buf,'\n')) != NULL ) {
 	    p++; 
@@ -244,16 +254,23 @@ TrimErrorFile( void )
 	 *  shift bytes to be saved to the beginning of the file...
 	 */
 	 
-	write (f1, p, n);
+	if(-1 == write (f1, p, n)) {
+            perror(strerror(errno));
+        }
 	
-	while ( (n = read(f2, buf, BUFSIZ)) > 0 )
-	    write(f1, buf, n);
+	while ( (n = read(f2, buf, BUFSIZ)) > 0 ) {
+	    if(-1 == write(f1, buf, n)) {
+                perror(strerror(errno));
+            }
+        }
 
 	/*
 	 *  truncate file to new length and close file pointers...
 	 */
 	 
-	truncate(errorLogFile, statb.st_size - deleteBytes);
+	if(-1 == truncate(errorLogFile, statb.st_size - deleteBytes)) {
+            perror(strerror(errno));
+        }
 	close(f1);
 	close(f2);
     }

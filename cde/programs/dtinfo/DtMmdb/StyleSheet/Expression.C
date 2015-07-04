@@ -141,15 +141,21 @@ BinaryOperatorNode::evaluate() const
 {
   // calculate children trees and then have feature value do the operation 
 
-#if !defined(SC3) && !defined(_IBMR2) && !defined(__uxp__) && !defined(__osf__) && !defined(USL) && !defined(linux) && !defined(CSRG_BASED)
+#if !defined(SC3) && !defined(_IBMR2) && !defined(__uxp__) && \
+    !defined(__osf__) && !defined(USL) && !defined(linux) && \
+    !defined(CSRG_BASED) && !defined(sun)
   volatile
 #endif
   FeatureValue *left =  0;
-#if !defined(SC3) && !defined(_IBMR2) && !defined(__uxp__) && !defined(__osf__) && !defined(USL) && !defined(linux) && !defined(CSRG_BASED)
+#if !defined(SC3) && !defined(_IBMR2) && !defined(__uxp__) && \
+    !defined(__osf__) && !defined(USL) && !defined(linux) && \
+    !defined(CSRG_BASED) && !defined(sun)
   volatile
 #endif
   FeatureValue *right = 0;
-#if !defined(SC3) && !defined(_IBMR2) && !defined(__uxp__) && !defined(__osf__) && !defined(USL) && !defined(linux) && !defined(CSRG_BASED)
+#if !defined(SC3) && !defined(_IBMR2) && !defined(__uxp__) && \
+    !defined(__osf__) && !defined(USL) && !defined(linux) && \
+    !defined(CSRG_BASED) && !defined(sun)
   volatile
 #endif
   FeatureValue *result = 0;
@@ -293,6 +299,9 @@ ConstantNode::evaluate() const
 
 extern unsigned g_validation_mode;
 
+#if defined(__FreeBSD__) && (__FreeBSD__ >= 10) && !defined(__llvm__)
+__attribute__((optimize(0)))
+#endif
 FeatureValue *
 SgmlAttributeNode::evaluate() const
 {

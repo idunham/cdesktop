@@ -38,6 +38,7 @@ static char rcs_id[] = "$XConsortium: TermPrimBuffer.c /main/1 1996/04/21 19:16:
 
 #define	USE_MEMCPY	/* use memcpy for line movement... */
 
+#include <stdlib.h>
 #include <wchar.h>
 #include <Xm/Xm.h>
 #include "TermHeader.h"       /* for MIN/MAX */
@@ -1025,7 +1026,7 @@ _DtTermPrimBufferInsert
 	_DtTermPrimBufferInsertWc(tb, row, col, (wchar_t *)newChars,
 				  numChars, insertFlag,
 				  returnChars, returnCount);
-	return;
+	return 0;
     }
 
     if (WIDTH(line) < col)
@@ -1968,7 +1969,7 @@ _DtTermPrimBufferDeleteLine
     copyLength = MAX(0, MIN(ROWS(tb), lastUsedRow) - source - length);
     if (copyLength > 0) {
 #ifdef	USE_MEMCPY
-	(void) memcpy(&(LINE_OF_TBUF(tb, source)),
+	(void) memmove(&(LINE_OF_TBUF(tb, source)),
                       &(LINE_OF_TBUF(tb, source + length)),
 		      copyLength * sizeof(TermLine));
 #else	/* USE_MEMCPY */

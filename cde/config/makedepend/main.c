@@ -148,7 +148,7 @@ catch (sig)
 struct sigaction sig_act;
 #endif /* USGISH */
 
-main(argc, argv)
+int main(argc, argv)
 	int	argc;
 	char	**argv;
 {
@@ -253,6 +253,17 @@ main(argc, argv)
 			if (**(incp-1) == '\0') {
 				*(incp-1) = *(++argv);
 				argc--;
+			}
+			break;
+		case 'i':
+			if (strncmp(argv[0]+2, "system", 6) == 0) {
+				if (incp >= includedirs + MAXDIRS)
+				    fatalerr("Too many -I flags.\n");
+				*incp++ = argv[0]+8;
+				if (**(incp-1) == '\0') {
+					*(incp-1) = *(++argv);
+					argc--;
+				}
 			}
 			break;
 		case 'Y':
@@ -480,11 +491,11 @@ char *copy(str)
 {
 	register char	*p = (char *)malloc(strlen(str) + 1);
 
-	strcpy(p, str);
+	strncpy(p, str, strlen(str) + 1);
 	return(p);
 }
 
-match(str, list)
+int match(str, list)
 	register char	*str, **list;
 {
 	register int	i;
@@ -514,7 +525,8 @@ char *our_getline(filep)
 	lineno = filep->f_line;
 
 	for(bol = p--; ++p < eof; ) {
-		if (*p == '/' && *(p+1) == '*') { /* consume comments */
+		if (*p == '/' && (p+1) < eof && *(p+1) == '*') {
+			/* consume C comments */
 			*p++ = ' ', *p++ = ' ';
 			while (*p) {
 				if (*p == '*' && *(p+1) == '/') {
@@ -527,15 +539,31 @@ char *our_getline(filep)
 			}
 			continue;
 		}
-#ifdef WIN32
-		else if (*p == '/' && *(p+1) == '/') { /* consume comments */
-			*p++ = ' ', *p++ = ' ';
-			while (*p && *p != '\n')
-				*p++ = ' ';
-			lineno++;
-			continue;
+		else if (*p == '/' && (p+1) < eof && *(p+1) == '/') {
+			/* consume C++ comments */
+			*p++ = ' ';
+			*p++ = ' ';
+			while (p < eof && *p) {
+				if (*p == '\\' && (p+1) < eof &&
+				    *(p+1) == '\n') {
+					*(p++) = ' ';
+					lineno++;
+				}
+				else if (*p == '?' && (p+3) < eof &&
+					 *(p+1) == '?' &&
+					 *(p+2) == '/' &&
+					 *(p+3) == '\n') {
+					*(p++) = ' ';
+					*(p++) = ' ';
+					*(p++) = ' ';
+					lineno++;
+				}
+				else if (*p == '\n')
+					break;  /* to process end of line */
+				*(p++) = ' ';
+			}
+			--p;
 		}
-#endif
 		else if (*p == '\\') {
 			if (*(p+1) == '\n') {
 				*p = ' ';
@@ -631,7 +659,7 @@ redirect(line, makefile)
 	    stat(makefile, &st);
 	if ((fdin = fopen(makefile, "r")) == NULL)
 		fatalerr("cannot open \"%s\"\n", makefile);
-	sprintf(backup, "%s.bak", makefile);
+	snprintf(backup, BUFSIZ, "%s.bak", makefile);
 	unlink(backup);
 #ifdef WIN32
 	fclose(fdin);

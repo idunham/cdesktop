@@ -2224,7 +2224,7 @@ build_todo_view(ToDo *t, Glance glance, Boolean redisplay) {
 				XmNvalueChangedCallback, t_view_change_proc, t);
 
 			step->next = NULL;
-			step->appt = NULL;
+			step->appt = 0;
 			if (last) {
 				XtVaSetValues(step->view_item_number,
 					XmNtopAttachment, XmATTACH_WIDGET,
@@ -2241,7 +2241,7 @@ build_todo_view(ToDo *t, Glance glance, Boolean redisplay) {
 			XtManageChild(step->view_item_number);
 			XtManageChild(step->view_item_toggle);
 		}
-		if (step->appt != NULL)
+		if (step->appt != 0)
 			csa_free((CSA_buffer) step->appt);
 		step->appt = entry_list[cnt - 1];
 		step->modified = False;
@@ -2294,7 +2294,7 @@ build_todo_view(ToDo *t, Glance glance, Boolean redisplay) {
 	**  possibly filled with old stuff -- unmanage these widgets.
 	*/
 	while (step) {
-		if (step->appt != NULL)
+		if (step->appt != 0)
 			csa_free((CSA_buffer) step->appt);
 		XtUnmanageChild(step->view_item_number);
 		XtUnmanageChild(step->view_item_toggle);
@@ -2483,7 +2483,7 @@ todo_insert(Dtcm_appointment *appt, CSA_entry_handle *new_a, Calendar *c) {
 		 * occurred.
 		 */
 		_DtTurnOffHourGlass(t->frame);
-		return;
+		return 0;
 	case 4:
 	default:
 		/*
@@ -2501,7 +2501,7 @@ todo_insert(Dtcm_appointment *appt, CSA_entry_handle *new_a, Calendar *c) {
 
 	if (stat != CSA_SUCCESS) {
 		_DtTurnOffHourGlass(t->frame);
-		return;
+		return 0;
 	}
 	csa_free((CSA_buffer) new_a);
 

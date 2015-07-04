@@ -58,7 +58,7 @@ static int PathInZList(char *path, char *fplist, int listlen);
 static int SeparateParts( char **path );
 
 
-static
+static void
 DebugFontPath(char *note, char **path, int nelems)
 {
     int i;
@@ -103,12 +103,12 @@ ApplyFontPathMods( struct display *d, Display *dpy )
 
     if (d->displayType.location == Foreign) {
         Debug("  Foreign display\n");
-        return;
+        return 0;
     }
 
     if (!(fontPath=XGetFontPath(dpy, &numPaths))) {
         Debug("  Can't get font path\n");
-        return;
+        return 0;
     }
 
     /*
@@ -182,6 +182,8 @@ ApplyFontPathMods( struct display *d, Display *dpy )
     if (fph) free(fph);
     if (fpt) free(fpt);
     XFreeFontPath(fontPath);
+
+    return 1;
 }
 
 /* ___________________________________________________________________

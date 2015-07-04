@@ -1,6 +1,6 @@
 XCOMM $TOG: Imakefile /main/13 1998/04/06 13:38:18 mgreess $
 
-DEPEND_DEFINES = $(CXXDEPENDINCLUDES)
+DEPEND_DEFINES = $(CXXDEPENDINCLUDES) $(DEPENDDEFINES)
 
 #include <Library.tmpl>
 
@@ -122,7 +122,6 @@ M4 = /bin/m4
 CXXOPTIONS = \
   -DSP_VOLATILE= -DSP_CONST= \
   -DSP_HAVE_LOCALE -DSP_MULTI_BYTE -DSP_ANSI_CLASS_INST
-EXTRA_INCLUDES = -I/opt/SUNWspro/SC2.0.1/include/CC
 
 /*
  * Flags passed into compile step when doing manual template instantiation.
@@ -446,6 +445,8 @@ SpecialCplusplusObjectRule(entmgr_inst,entmgr_inst,$(CXXTEMPLATEFLAGS))
 SpecialCplusplusObjectRule(nsgmls_inst,nsgmls_inst,$(CXXTEMPLATEFLAGS))
 SpecialCplusplusObjectRule(parser_inst,parser_inst,$(CXXTEMPLATEFLAGS))
 SpecialCplusplusObjectRule(xentmgr_inst,xentmgr_inst,$(CXXTEMPLATEFLAGS))
+
+includes::  $(GENERATED_SRCS)
 
 NormalCplusplusObjectRule()
 ComplexCplusplusProgramTarget($(PROGRAMS))

@@ -272,7 +272,7 @@ appointmentBody	: tick key what details duration period nth enddate ntimes excep
 					newp->author = $12;
 					newp->attr = $13;
 
-					if (temp != NULL && (*temp)!=NULL) {
+					if (temp != NULL && (*temp)!='\0') {
 						item = newp->attr;
 						while(item!=NULL) {
 							if(strcmp(item->attr, "ml")==0) {
@@ -372,7 +372,7 @@ mailto		: /* empty */
 
 duration	: /* empty */
 			{
-				$$ = NULL;
+				$$ = '\0';
 			}
 		| DURATION COLON number
 			{
@@ -693,7 +693,7 @@ str_to_cr(char *s)
                 }
                 k++;
         }
-        newstr[k] = NULL;
+        newstr[k] = '\0';
         return(newstr);
 }
 
@@ -751,6 +751,8 @@ get_month(char *month)
 		return (10);
 	if (strncmp(month, "Dec", 3) == 0)
 		return (11);
+		
+	return (-1);
 }
 
 time_t
@@ -763,7 +765,7 @@ convert_2_tick(char *datestr)
 	if (datestr == NULL)
 		return (-1);
 
-	memset((void *)&tmstr, NULL, sizeof(struct tm));
+	memset((void *)&tmstr, 0, sizeof(struct tm));
 
 	strcpy(datebuf, datestr);
 
@@ -791,7 +793,7 @@ convert_2_tick(char *datestr)
 		if ((tptr = strchr(ptr, ':')) == NULL)
 			return (-1);
 		else {
-			*tptr = NULL;
+			*tptr = '\0';
 			tmstr.tm_hour = atoi(ptr);
 		}
 
@@ -799,7 +801,7 @@ convert_2_tick(char *datestr)
 		if ((tptr = strchr(ptr, ':')) == NULL)
 			return (-1);
 		else {
-			*tptr = NULL;
+			*tptr = '\0';
 			tmstr.tm_min = atoi(ptr);
 		}
 
@@ -907,11 +909,11 @@ get_attr_value(int type, char *valstr, cms_attribute_value **attrval)
 		stat = _DtCm_set_string_attrval(valstr, attrval, type);
 		break;
 	case CSA_VALUE_REMINDER:
-		memset((void *)&remval, NULL, sizeof (CSA_reminder));
+		memset((void *)&remval, 0, sizeof (CSA_reminder));
 		if (ptr1 = strchr(valstr, ':')) {
-			*ptr1++ = NULL;
+			*ptr1++ = '\0';
 			if (ptr2 = strchr(ptr1, ':')) {
-				*ptr2++ = NULL;
+				*ptr2++ = '\0';
 				ptr3 = strchr(ptr2, ':');
 			}
 		}
@@ -929,9 +931,9 @@ get_attr_value(int type, char *valstr, cms_attribute_value **attrval)
 			stat = _DtCm_set_reminder_attrval(&remval, attrval);
 		} else {
 			/* format = "string:string:number:number:string" */
-			*ptr3++ = NULL;
+			*ptr3++ = '\0';
 			if (ptr4 = strchr(ptr3, ':')) {
-				*ptr4++ = NULL;
+				*ptr4++ = '\0';
 				remval.lead_time = valstr;
 				remval.snooze_time = ptr1;
 				remval.repeat_count = atoi(ptr2);
@@ -953,7 +955,7 @@ get_attr_value(int type, char *valstr, cms_attribute_value **attrval)
 		break;
 	case CSA_VALUE_OPAQUE_DATA:
 		if (ptr1 = strchr(valstr, ':')) {
-			*ptr1++ = NULL;
+			*ptr1++ = '\0';
 			opqval.size = atoi(valstr);
 			opqval.data = (unsigned char *)ptr1;
 			stat = _DtCm_set_opaque_attrval(&opqval, attrval);
@@ -1042,7 +1044,7 @@ get_user_access_entry(char *string, cms_access_entry **a)
 		return (CSA_E_INSUFFICIENT_MEMORY);
 	}
 
-	*ptr = NULL;
+	*ptr = '\0';
 	if ((item->user = strdup(string)) == NULL) {
 		free(item);
 		return (CSA_E_INSUFFICIENT_MEMORY);
@@ -1070,7 +1072,7 @@ grow_attr_array(_attr_array *attrs)
 	attrs->total += _DEFAULT_ARRAY_SIZE;
 	attrs->attrs = newptr;
 
-	memset((void *)&attrs->attrs[attrs->current], NULL,
+	memset((void *)&attrs->attrs[attrs->current], 0,
 		sizeof(cms_attribute)*_DEFAULT_ARRAY_SIZE);
 }
 
